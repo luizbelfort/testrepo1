@@ -25,6 +25,13 @@ CHECKS = [
     ('bu_bweb', 'BU = planilha bweb do TSE (Lula, Flávio, comparecimento, aptos)'),
     ('hab_sum', 'Habilitações no BU (código + biometria + outras) = comparecimento'),
 ]
+# Every remaining divergence was opened and read in the urna's own log; what the log shows (see README):
+EXPLAINED = {
+    'o03221es5793200090085': 'Urna de votação 01841837 teve erro no RED ao gerar o resultado (21:19); a urna de contingência 01758779 recuperou os votos (BEHB), imprimiu o BU e gerou e assinou os arquivos — o certificado é o dela. Votos conferem com RDV e bweb.',
+    'o03221rj5869600270139': 'Urna de votação 02179194 teve erro no RED ao gerar o resultado (22:06); a urna de contingência 02189420 recuperou os votos (BEHB), imprimiu o BU e gerou e assinou os arquivos — o certificado é o dela. Votos conferem com RDV e bweb.',
+    'o03221sp6477703930312': 'Urna de votação 02396114 foi desligada às 17:32 sem gerar resultado; a urna de contingência 02399743 recuperou os votos (BEHB) às 21:09, imprimiu o BU e gerou e assinou os arquivos — o certificado é o dela. Votos conferem com RDV e bweb.',
+    'o03221sp6477703950298': 'O pacote do TSE não traz o log (log.jez) desta urna; os outros 3 arquivos (BU, RDV, imagem do BU) têm o hash assinado.',
+}
 PUBLISHED = {'bu.dat', 'rdv.dat', 'imgbu.dat', 'log.jez', 'vota.vsc'}
 
 
@@ -139,7 +146,8 @@ def main():
         bad = res[[c for c, _ in CHECKS]].all(axis=1) == False
         fails = res[bad].merge(D, on=['key', 'uf'], how='left')
         fails['failed_checks'] = fails[[c for c, _ in CHECKS]].apply(lambda r: ','.join(c for c, _ in CHECKS if not r[c]), axis=1)
-        keep = ['key', 'uf', 'muni', 'failed_checks'] + [c for c in D.columns if c not in ('key', 'uf', 'muni')]
+        fails['explicacao'] = fails.key.map(EXPLAINED).fillna('')
+        keep = ['key', 'uf', 'muni', 'failed_checks', 'explicacao'] + [c for c in D.columns if c not in ('key', 'uf', 'muni')]
         fails[keep].to_csv(os.path.join(outdir, 'conferencia_falhas.csv'), index=False)
         J['verify_fail_by_check'] = {c: int((~res[c]).sum()) for c, _ in CHECKS}
         J['verify_fail_list'] = json.loads(fails[keep].head(500).to_json(orient='records'))

@@ -19,8 +19,8 @@ function verifySection(C, M) {
     const worst = C.checks.filter(c => s.urnas - s[c.key] > 0).map(c => `${c.key}: ${fmtInt(s.urnas - s[c.key])}`).join(' · ');
     return `<tr><td>${esc(s.scope)}</td><td>${fmtInt(s.urnas)}</td><td>${bad ? `<span class="yes">${esc(worst)}</span>` : 'todas conferem'}</td></tr>`;
   }).join('');
-  const fl = (C.verify_fail_list || []).slice(0, 200).map(r => `<tr><td>${esc(r.uf)}</td><td>${esc(r.muni)}</td><td><code>${esc(r.key)}</code></td><td>${esc(r.failed_checks)}</td><td>${r.bu_lula ?? '—'} / ${r.rdv_lula ?? '—'} / ${r.w_lula ?? '—'}</td><td>${r.bu_flavio ?? '—'} / ${r.rdv_flavio ?? '—'} / ${r.w_flavio ?? '—'}</td><td>${r.bu_comp ?? '—'} / ${r.rdv_n ?? '—'} / ${r.w_comp ?? '—'}</td><td>${esc(r.fetch_error || r.sig_error || r.bu_error || r.rdv_error || r.sw_mismatch || r.hw_mismatch || '')}</td></tr>`).join('');
-  const iss = Object.entries(C.cert_issuers || {}).map(([k, v]) => `${esc(k)}: ${fmtInt(v)}`).join(' · ');
+  const fl = (C.verify_fail_list || []).slice(0, 200).map(r => `<tr><td>${esc(r.uf)}</td><td>${esc(r.muni)}</td><td><code>${esc(r.key)}</code></td><td>${esc(r.failed_checks)}</td><td>${r.bu_lula ?? '—'} / ${r.rdv_lula ?? '—'} / ${r.w_lula ?? '—'}</td><td>${r.bu_flavio ?? '—'} / ${r.rdv_flavio ?? '—'} / ${r.w_flavio ?? '—'}</td><td>${r.bu_comp ?? '—'} / ${r.rdv_n ?? '—'} / ${r.w_comp ?? '—'}</td><td>${esc(r.explicacao || r.fetch_error || r.sig_error || r.bu_error || r.rdv_error || r.sw_mismatch || r.hw_mismatch || '')}</td></tr>`).join('');
+  const iss = Object.entries(C.cert_issuers || {}).map(([k, v]) => `${k === '—' ? 'sem certificado (SA)' : esc(k)}: ${fmtInt(v)}`).join(' · ');
   const mod = Object.entries(C.models || {}).map(([k, v]) => `${k === '—' ? 'sem modelo (SA)' : 'UE20' + parseInt(k)}: ${fmtInt(v)}`).join(' · ');
   return `
   <h2>Conferência dos arquivos de cada urna</h2>
@@ -38,7 +38,7 @@ function verifySection(C, M) {
   <div class="chart-title">Por estado</div>
   <div class="table-wrap"><table class="grid"><thead><tr><th>UF</th><th>Urnas</th><th>Divergências</th></tr></thead><tbody>${st}</tbody></table></div>
   <div class="chart-title">Urnas com alguma conferência que não fechou (${fmtInt(C.verify_fail_total || 0)}) — <a href="data/conferencias/conferencia_falhas.csv" download>baixar CSV completo</a> · <a href="data/conferencias/conferencia_por_urna.csv.gz" download>todas as urnas</a></div>
-  ${fl ? `<div class="table-wrap"><table class="grid"><thead><tr><th>UF</th><th>Município</th><th>Arquivo</th><th>Conferências que falharam</th><th>Lula BU/RDV/bweb</th><th>Flávio BU/RDV/bweb</th><th>Total BU/RDV/bweb</th><th>Detalhe</th></tr></thead><tbody>${fl}</tbody></table></div>` : '<p class="note">Nenhuma.</p>'}`;
+  ${fl ? `<div class="table-wrap"><table class="grid"><thead><tr><th>UF</th><th>Município</th><th>Arquivo</th><th>Conferências que falharam</th><th>Lula BU/RDV/bweb</th><th>Flávio BU/RDV/bweb</th><th>Total BU/RDV/bweb</th><th>O que o log da urna mostra</th></tr></thead><tbody>${fl}</tbody></table></div>` : '<p class="note">Nenhuma.</p>'}`;
 }
 
 function anomalySection(C, M) {
