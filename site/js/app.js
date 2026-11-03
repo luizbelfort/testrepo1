@@ -30,7 +30,6 @@ async function init() {
   statesGeo = await getJSON(M.geo.states);
   for (const f of statesGeo.features) stateFeat.set(f.properties.uf, f);
   await initMap();
-  for (const st of M.states.filter(s => s.loaded)) await loadState(st.uf);
   timeline = new Timeline({
     track: $('#tl-track'), canvas: $('#tl-canvas'), markersEl: $('#tl-markers'), handle: $('#tl-handle'),
     manifest: M, onChange: t => { S.t = t; scheduleRender(); },
@@ -41,12 +40,32 @@ async function init() {
   buildRegions();
   timeline.set(S.t);
   render();
+  loadAllStates();
 }
+
+// Load every processed state in the background (4 at a time); the map fills in as they arrive.
+async function loadAllStates() {
+  const queue = M.states.filter(s => s.loaded).map(s => s.uf);
+  const total = queue.length; let done = 0;
+  const status = () => { $('#election-name').textContent = done < total ? `${M.election.label} · carregando estados ${done}/${total}…` : M.election.label; };
+  status();
+  const next = async () => {
+    while (queue.length) {
+      const uf = queue.shift();
+      try { await loadState(uf); } catch (e) { console.error(uf, e); }
+      done++; status(); scheduleFull();
+    }
+  };
+  await Promise.all([next(), next(), next(), next()]);
+}
+let fullTimer = 0;
+function scheduleFull() { clearTimeout(fullTimer); fullTimer = setTimeout(() => render(), 250); }
 
 async function loadState(uf) {
   const st = M.states.find(s => s.uf === uf);
   const [raw, geo] = await Promise.all([getJSON(st.file), getJSON(st.geo)]);
   const sd = new StateData(M, raw);
+  snaps.set(uf, sd.snapshot(S.t, S.th));   // snapshot first: other code assumes every loaded state has one
   loaded.set(uf, sd); munGeo.set(uf, geo);
   map.addSource(`mun-${uf}`, { type: 'geojson', data: geo, promoteId: 'id' });
   map.addLayer({ id: `mun-${uf}-fill`, type: 'fill', source: `mun-${uf}`, paint: {
@@ -55,7 +74,8 @@ async function loadState(uf) {
     'line-color': ['case', ['boolean', ['feature-state', 'sel'], false], '#f0efec', ['boolean', ['feature-state', 'hover'], false], '#c3c2b7', '#0a0a0b'],
     'line-width': ['case', ['boolean', ['feature-state', 'sel'], false], 2.2, ['boolean', ['feature-state', 'hover'], false], 1.6, 0.35] } }, 'states-line');
   const pts = { type: 'FeatureCollection', features: raw.munis.ibge.map((id, i) => ({
-    type: 'Feature', id: i, properties: { id }, geometry: { type: 'Point', coordinates: [raw.munis.lon[i], raw.munis.lat[i]] } })) };
+    type: 'Feature', id: i, properties: { id }, geometry: { type: 'Point', coordinates: [raw.munis.lon[i], raw.munis.lat[i]] } }))
+    .filter(f => f.geometry.coordinates[0] != null) };   // municipalities without a shape have no point
   map.addSource(`pts-${uf}`, { type: 'geojson', data: pts, promoteId: 'id' });
   map.addLayer({ id: `pts-${uf}`, type: 'circle', source: `pts-${uf}`, layout: { visibility: 'none' }, paint: {
     'circle-radius': ['coalesce', ['feature-state', 'r'], 0], 'circle-color': COLORS.amber, 'circle-opacity': 0.75,
@@ -244,10 +264,16 @@ function paintMap() {
   for (const [uf, s] of snaps) for (const v of s.fast) fastMax = Math.max(fastMax, v);
   for (const [uf, sd] of loaded) {
     const s = snaps.get(uf);
+    const showPts = S.fastOverlay && effectiveMode() === 'vote';
     for (let i = 0; i < sd.nMun; i++) {
       const id = sd.raw.munis.ibge[i];
-      map.setFeatureState({ source: `mun-${uf}`, id }, { color: colorFor(munValue(uf, i)) });
-      map.setFeatureState({ source: `pts-${uf}`, id }, { r: s.fast[i] ? 3 + 16 * Math.sqrt(s.fast[i] / fastMax) : 0 });
+      if (sd.raw.munis.lon[i] == null) continue;                 // no shape for this municipality
+      const col = colorFor(munValue(uf, i));
+      if (col !== sd.lastColor[i]) { sd.lastColor[i] = col; map.setFeatureState({ source: `mun-${uf}`, id }, { color: col }); }
+      if (showPts) {
+        const r = s.fast[i] ? Math.round((3 + 16 * Math.sqrt(s.fast[i] / fastMax)) * 2) / 2 : 0;
+        if (r !== sd.lastR[i]) { sd.lastR[i] = r; map.setFeatureState({ source: `pts-${uf}`, id }, { r }); }
+      }
     }
     map.setLayoutProperty(`pts-${uf}`, 'visibility', S.fastOverlay && effectiveMode() === 'vote' ? 'visible' : 'none');
     map.setFeatureState({ source: 'states', id: uf }, { color: '#0a0a0b' });
@@ -329,8 +355,10 @@ function renderPanel() {
   $('#p-title').textContent = title;
   $('#p-sub').textContent = a.statesLoaded
     ? `${fmtInt(a.urnas)} urnas · ${fmtInt(a.aptos)} eleitores aptos${a.statesTotal > 1 ? ` · ${a.statesLoaded} de ${a.statesTotal} estados com dados carregados` : ''}`
-    : 'Dados deste estado ainda não foram processados.';
+    : 'Dados ainda não disponíveis.';
   const body = $('#p-body');
+  const pending = scopeStates().some(uf => M.states.find(s => s.uf === uf)?.loaded && !loaded.has(uf));
+  if (!a.statesLoaded && pending) { body.innerHTML = `<div class="card"><div class="empty">Carregando os dados deste estado…</div></div>`; return; }
   if (!a.statesLoaded) { body.innerHTML = `<div class="card"><div class="empty">Os arquivos de urna deste estado ainda não foram baixados e processados. Estados com dados: ${M.states.filter(s => s.loaded).map(s => s.name).join(', ')}.</div></div>`; return; }
   const parts = [];
   parts.push(statusCard(a));
@@ -426,11 +454,20 @@ function bindFast() {
 }
 
 // ---------------------------------------------------------------- patterns (ranked lists)
+class TopK {   // keeps the k largest items by .v without sorting everything
+  constructor(k) { this.k = k; this.a = []; }
+  push(x) {
+    const a = this.a;
+    if (a.length < this.k) { a.push(x); a.sort((p, q) => q.v - p.v); return; }
+    if (x.v <= a[a.length - 1].v) return;
+    a[a.length - 1] = x; a.sort((p, q) => q.v - p.v);
+  }
+}
 function renderPatterns() {
   const el = $('#patterns'); if (!el) return;
   const sel = S.sel, t = S.t, out = [];
   const listHTML = (title, items, empty) => `<h3 style="margin-top:6px">${title}</h3>${items.length ? `<ul class="list">${items.join('')}</ul>` : `<div class="empty">${empty}</div>`}`;
-  const urnaItems = [], lateItems = [], munItems = [];
+  const urnaItems = new TopK(6), lateItems = new TopK(6), munItems = new TopK(6);
   for (const uf of scopeStates()) {
     const sd = loaded.get(uf); if (!sd) continue;
     const u = sd.u, set = new Set(scopeMunis(uf)), snap = snaps.get(uf);
@@ -443,13 +480,10 @@ function renderPatterns() {
   }
   const urnaLi = (x, val) => { const sd = loaded.get(x.uf), u = sd.u, k = x.k;
     return `<li data-uf="${x.uf}" data-k="${k}"><span class="li-main">${esc(sd.raw.munis.name[u.m[k]])} · zona ${u.z[k]}, seção ${u.s[k]}</span><span class="li-val">${val}</span><span class="li-sub">${esc(sd.raw.models[u.model[k]] || '')} · encerrou ${hhmmss(u.close[k])}</span></li>`; };
-  urnaItems.sort((p, q) => q.v - p.v);
-  out.push(listHTML('Urnas com maior proporção de votos sem biometria', urnaItems.slice(0, 6).map(x => urnaLi(x, pct(x.v))), 'Nenhuma urna encerrada até este horário.'));
-  lateItems.sort((p, q) => q.v - p.v);
-  out.push(listHTML('Urnas encerradas mais tarde', lateItems.slice(0, 6).map(x => urnaLi(x, hhmm(x.v))), 'Nenhuma urna encerrada até este horário.'));
+  out.push(listHTML('Urnas com maior proporção de votos sem biometria', urnaItems.a.map(x => urnaLi(x, pct(x.v))), 'Nenhuma urna encerrada até este horário.'));
+  out.push(listHTML('Urnas encerradas mais tarde', lateItems.a.map(x => urnaLi(x, hhmm(x.v))), 'Nenhuma urna encerrada até este horário.'));
   if (sel.level !== 'muni') {
-    munItems.sort((p, q) => q.v - p.v);
-    out.push(listHTML('Municípios com maior proporção de votos rápidos', munItems.slice(0, 6).map(x => {
+    out.push(listHTML('Municípios com maior proporção de votos rápidos', munItems.a.map(x => {
       const sd = loaded.get(x.uf);
       return `<li data-uf="${x.uf}" data-ibge="${sd.raw.munis.ibge[x.i]}"><span class="li-main">${esc(sd.raw.munis.name[x.i])}</span><span class="li-val"><span class="flag">${pct(x.v, 1)}</span></span><span class="li-sub">${fmtInt(x.n)} de ${fmtInt(x.m)} votos sem biometria</span></li>`;
     }), 'Sem municípios com ao menos 30 votos sem biometria até este horário.'));
@@ -576,7 +610,7 @@ function step(now) {
 
 // ---------------------------------------------------------------- about
 function buildAbout() {
-  const src = M.sources.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>${s.sha512 ? `<br>SHA-512: <code>${esc(s.sha512)}</code>` : ''}${s.note ? `<br>${esc(s.note)}` : ''}</li>`).join('');
+  const src = M.sources.slice(0, 3).map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>${s.sha512 ? `<br>SHA-512: <code>${esc(s.sha512)}</code>` : ''}${s.note ? `<br>${esc(s.note)}` : ''}</li>`).join('');
   const mk = M.markers.map(m => `<li><b>${esc(m.label)} (${hhmmss(m.t)})</b>: ${esc(m.desc)}</li>`).join('');
   const B = M.fast_bins;
   $('#about-body').innerHTML = `
@@ -593,8 +627,11 @@ function buildAbout() {
     <p>Um voto sem biometria é marcado como rápido quando cumpre os três limites escolhidos: (1) tempo das leituras de digital até a urna pedir os dados pessoais (opções: ${B.fp.map(v => v ?? 'qualquer').join(', ')} s); (2) tempo até a digital do mesário liberar o eleitor (${B.rel.map(v => v ?? 'qualquer').join(', ')} s); (3) tempo da habilitação até o voto computado (${B.vote.map(v => v ?? 'qualquer').join(', ')} s). Para comparação, o site mostra sempre a mesma medida (3) entre eleitores identificados pela digital.</p>
     <h4>Verificação</h4>
     <p>Cada contagem de votos e de "não habilitados por biometria" extraída dos logs foi conferida contra o Boletim de Urna da mesma seção. ${esc(M.validation || '')}</p>
-    ${(M.discrepancies || []).length ? `<p><b>Urnas em que o log difere do BU:</b></p><ul>${M.discrepancies.map(d => `<li>${esc(d.uf)} · zona ${esc(d.zona)}, seção ${esc(d.secao)}: BU ${d.bu_votes} votos / ${d.bu_manual} sem biometria; log ${d.log_votes} / ${d.log_manual}. ${esc(d.note)}</li>`).join('')}</ul>` : ''}
+    ${(M.validation_by_state || []).length > 1 ? `<details><summary>Conferência por estado</summary><table class="grid"><thead><tr><th>UF</th><th>Urnas</th><th>Votos log = BU</th><th>Sem biometria log = BU</th><th>Votos após reinício descartados</th></tr></thead><tbody>${M.validation_by_state.map(v => `<tr><td>${esc(v.uf)}</td><td>${fmtInt(v.urnas)}</td><td>${fmtInt(v.ok_votes)}</td><td>${fmtInt(v.ok_manual)}</td><td>${fmtInt(v.recovered_votes_dropped)}</td></tr>`).join('')}</tbody></table></details>` : ''}
+    ${(M.discrepancies || []).length ? `<details><summary><b>${fmtInt(M.discrepancies.length)} urnas em que o log difere do BU</b> (listadas uma a uma)</summary><ul>${M.discrepancies.map(d => `<li>${esc(d.uf)} · ${esc(d.municipio || '')} · zona ${esc(d.zona)}, seção ${esc(d.secao)}: BU ${d.bu_votes} votos / ${d.bu_manual} sem biometria; log ${d.log_votes} / ${d.log_manual}.${d.contingency ? ' Urna substituída (contingência).' : ''}${d.restarts > 2 ? ` ${d.restarts} reinícios no dia.` : ''} ${esc(d.note)}</li>`).join('')}</ul></details>` : ''}
+    <p class="note">Quando a urna reinicia logo após um voto confirmado, o log não registra "voto computado". Às vezes o BU conta esse voto, às vezes não (o eleitor votou de novo); o site segue o BU em cada caso e informa quantos foram descartados.</p>
     <h4>Privacidade</h4><p>Os logs contêm o número do título de mesários. O site não publica esses números.</p>
     <h4>Fontes</h4><ul>${src}</ul>
+    ${M.sources.length > 3 ? `<details><summary>Arquivos por estado (${M.sources.length - 3}), com SHA-512</summary><ul>${M.sources.slice(3).map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>${s.sha512 ? `<br>SHA-512: <code>${esc(s.sha512)}</code>` : ''}${s.note ? `<br>${esc(s.note)}` : ''}</li>`).join('')}</ul></details>` : ''}
     <p class="note">Gerado em ${esc(M.generated)}. Código e método: pasta <code>pipeline/</code> do repositório.</p>`;
 }

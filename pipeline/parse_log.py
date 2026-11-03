@@ -30,11 +30,16 @@ def iter_lines(jez_bytes):
             yield from iter_lines(data)
 
 
-def merged_lines(jez_bytes):
+def merged_lines(jez_bytes, day=None, meta=None):
     """All log lines of the package (main log + archived logs of replaced urnas), exact duplicates removed
-    (contingency packages can contain the same archived log twice), in chronological order (stable)."""
+    (contingency packages can contain the same archived log twice), in chronological order (stable).
+    With `day`, only that day's lines are kept (the urna model is still read from any line into meta)."""
     seen, rows = set(), []
     for fname, line in iter_lines(jez_bytes):
+        if day and not line.startswith(day):
+            if meta is not None and meta['model'] is None and 'Modelo de Urna' in line:
+                meta['model'] = line.split(':')[-1].strip().split('\t')[0]
+            continue
         if line in seen:
             continue
         seen.add(line)
@@ -48,7 +53,8 @@ def merged_lines(jez_bytes):
 
 def parse(jez_bytes, day='25/10/2026'):
     voters, meta = [], {'files': set(), 'model': None, 'close': None, 'open': None,
-                        'mesarios_sec': {}, 'n_lines_day': 0, 'turno2_starts': 0}
+                        'mesarios_sec': {}, 'n_lines_day': 0, 'turno2_starts': 0,
+                        'contingency': False, 'restarts': 0, 'urna_ids': set()}
     cur = None
     del_keys = ('fp_scores',)
 
@@ -58,7 +64,7 @@ def parse(jez_bytes, day='25/10/2026'):
                 'releaser': None, 'fp_scores': [], 't_fp_first': None, 't_manual': None, 't_mes_req': None,
                 't_hab': None, 't_vote': None, 't_confirm': None, 'recovered': False, 'cancelled': False}
 
-    for fname, line in merged_lines(jez_bytes):
+    for fname, line in merged_lines(jez_bytes, day, meta):
         meta['files'].add(fname)
         parts = line.split('\t')
         if len(parts) < 5:
@@ -79,7 +85,11 @@ def parse(jez_bytes, day='25/10/2026'):
         m = RE_MES_SEC.search(msg)
         if m:
             meta['mesarios_sec'][anon(m.group(1))] = (m.group(2) == 'é')
+        meta['urna_ids'].add(ue)
+        if 'Contingência executada com sucesso' in msg:
+            meta['contingency'] = True
         if comp == 'LOGD' and msg.startswith('Início das operações do logd'):
+            meta['restarts'] += 1
             # urna restarted (e.g. power loss). A vote confirmed right before the restart is stored on the
             # voting media and counted in the BU even though the "computado" line was never written.
             if cur and cur['t_confirm'] and not cur['t_vote']:
@@ -126,7 +136,7 @@ def parse(jez_bytes, day='25/10/2026'):
             cur['t_vote'] = t; voters.append(cur); cur = None
     if cur and cur['t_id'] and not cur['t_vote']:
         cur['cancelled'] = True; voters.append(cur)
-    meta['files'] = sorted(meta['files'])
+    meta['files'] = sorted(meta['files']); meta['urna_ids'] = sorted(meta['urna_ids'])
     return voters, meta
 
 

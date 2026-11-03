@@ -179,3 +179,7 @@ table.grid tr.sel td { background: #2a2a20; }
   .tl-marker button { font-size: 10px; padding: 1px 5px; }
   .topbar-actions .btn { padding: 6px 10px; font-size: 12px; }
 }
+
+.modal details { margin: 8px 0; color: var(--text-secondary); }
+.modal summary { cursor: pointer; color: var(--text-primary); }
+.modal details table.grid { margin-top: 8px; }

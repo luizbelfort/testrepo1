@@ -4,7 +4,10 @@
 export async function getJSON(url) {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
-  return r.json();
+  if (!url.endsWith('.gz')) return r.json();
+  // data files are gzip-compressed JSON; servers deliver them as plain bytes, so decompress here
+  const stream = r.body.pipeThrough(new DecompressionStream('gzip'));
+  return JSON.parse(await new Response(stream).text());
 }
 
 function prefix(arr) {
@@ -31,6 +34,8 @@ export class StateData {
     for (let i = 0; i < this.nUrna; i++) this.urnasByMun[u.m[i]].push(i);
     this.fastCache = null;
     this.munFast = new Map();
+    this.lastColor = new Array(this.nMun).fill(null);   // avoid re-sending unchanged feature states to the map
+    this.lastR = new Array(this.nMun).fill(-1);
   }
 
   bucketsDone(t) {
@@ -111,7 +116,7 @@ export class StateData {
 
   async loadMunFast(ibge) {
     if (this.munFast.has(ibge)) return this.munFast.get(ibge);
-    const p = getJSON(`data/${this.uf}/fast/${ibge}.json`);
+    const p = getJSON(`data/${this.uf}/fast/${ibge}.json.gz`);
     this.munFast.set(ibge, p);
     return p;
   }

@@ -2,7 +2,8 @@
 
 usage: python index_zip.py <zip URL> <index.pkl>
 """
-import pickle, sys, zipfile
+import os, pickle, sys, zipfile
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from httpzip import HTTPFile
 
 url, out = sys.argv[1:3]
