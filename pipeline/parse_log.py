@@ -51,12 +51,27 @@ def merged_lines(jez_bytes, day=None, meta=None):
         yield fname, line
 
 
-def parse(jez_bytes, day='25/10/2026'):
+def parse(jez_bytes, day='25/10/2026', section=None):
     voters, meta = [], {'files': set(), 'model': None, 'close': None, 'open': None,
                         'mesarios_sec': {}, 'n_lines_day': 0, 'turno2_starts': 0,
                         'contingency': False, 'restarts': 0, 'urna_ids': set()}
     cur = None
     del_keys = ('fp_scores',)
+    # A package can contain archived logs of urnas loaded for OTHER sections (e.g. a contingency urna that served
+    # two sections). Votes are counted only from urnas whose loaded section is this package's section.
+    sec_of = {}
+    meta['foreign_votes'] = 0
+    pending = None
+
+    def close_pending():
+        nonlocal pending
+        if pending is not None:
+            if pending['t_confirm']:
+                pending['t_vote'] = pending['t_confirm']; pending['recovered'] = True
+            else:
+                pending['cancelled'] = True
+            voters.append(pending)
+        pending = None
 
     def new(t):
         return {'t_start': t, 't_id': None, 'id_type': None, 'fp_tries': 0, 'hab_type': None,
@@ -86,24 +101,35 @@ def parse(jez_bytes, day='25/10/2026'):
         if m:
             meta['mesarios_sec'][anon(m.group(1))] = (m.group(2) == 'é')
         meta['urna_ids'].add(ue)
+        if msg.startswith('Seção Eleitoral: '):
+            try: sec_of[ue] = int(msg.split(':')[1])
+            except ValueError: pass
         if 'Contingência executada com sucesso' in msg:
             meta['contingency'] = True
         if comp == 'LOGD' and msg.startswith('Início das operações do logd'):
             meta['restarts'] += 1
-            # urna restarted (e.g. power loss). A vote confirmed right before the restart is stored on the
-            # voting media and counted in the BU even though the "computado" line was never written.
-            if cur and cur['t_confirm'] and not cur['t_vote']:
-                cur['t_vote'] = cur['t_confirm']; cur['recovered'] = True; voters.append(cur)
+            # urna restarted (e.g. power loss) while a voter was in progress. Keep that voter pending: if the
+            # "computado" line arrives after the reboot it is a normal vote; if the next voter starts instead and
+            # the vote had been confirmed, it becomes a "recovered" vote (reconciled with the BU by the builder).
+            if cur and cur['t_id'] and not cur['t_vote']:
+                pending = cur
             cur = None
             continue
         if comp != 'VOTA':
             continue
+        if section is not None and sec_of.get(ue, section) not in (section, 0):
+            if msg.startswith('O voto do eleitor foi computado'): meta['foreign_votes'] += 1
+            continue
         if msg.startswith('Aguardando digitação do identificador do eleitor'):
+            close_pending()
             if cur and cur['t_id'] and not cur['t_vote']:
                 cur['cancelled'] = True; voters.append(cur)
             cur = new(t)
             continue
         if cur is None:
+            if msg.startswith('O voto do eleitor foi computado'):   # vote completed after a reboot
+                v = pending or new(t); pending = None
+                v['t_vote'] = t; voters.append(v)
             continue
         if msg.startswith('Identificador digitado pelo mesário foi'):
             cur['t_id'] = t; cur['id_type'] = msg.split('(')[-1].rstrip(')')
@@ -134,6 +160,7 @@ def parse(jez_bytes, day='25/10/2026'):
             cur['t_hab'] = t
         elif msg.startswith('O voto do eleitor foi computado'):
             cur['t_vote'] = t; voters.append(cur); cur = None
+    close_pending()
     if cur and cur['t_id'] and not cur['t_vote']:
         cur['cancelled'] = True; voters.append(cur)
     meta['files'] = sorted(meta['files']); meta['urna_ids'] = sorted(meta['urna_ids'])

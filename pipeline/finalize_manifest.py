@@ -43,7 +43,19 @@ def main():
         for k, v in s['normal_close_hist'].items(): hist[int(k)] = hist.get(int(k), 0) + v
     mins = np.repeat(np.array(sorted(hist)), [hist[k] for k in sorted(hist)])
     ext_start = int(np.percentile(mins, 99) * 60) if len(mins) else 17 * 3600
-    last_close = max(s['last_close'] for s in sums.values() if s['last_close'])
+    # all closing times (Brasília) from the state files, to place the end of the extension robustly
+    import gzip
+    closes, last = [], None
+    for uf in loaded:
+        d = json.load(gzip.open(os.path.join(out, 'data', f'{uf}.json.gz')))
+        u = d['urnas']
+        for k, c in enumerate(u['close']):
+            if c < 0: continue
+            closes.append(c)
+            if last is None or c > last[0]: last = (c, uf, d['munis']['name'][u['m'][k]], u['z'][k], u['s'][k], u['comp'][k])
+    closes = np.sort(np.array(closes))
+    ext_end = int(closes[int(np.ceil(len(closes) * 0.9999)) - 1])
+    last_close = last[0]
     first_bu = min(s['first_bu'] for s in sums.values() if s['first_bu'])
     last_bu = max(s['last_bu'] for s in sums.values() if s['last_bu'])
     scope = 'todas as urnas carregadas' if len(loaded) > 1 else f'urnas de {loaded[0]}'
@@ -51,7 +63,8 @@ def main():
         {'key': 'open', 'short': 'Abertura', 't': 8 * 3600, 'label': 'Início da votação', 'desc': 'Horário oficial de abertura (08:00, horário de Brasília).'},
         {'key': 'close_regular', 'short': 'Encerr.', 't': 17 * 3600, 'label': 'Encerramento regular', 'desc': 'Horário oficial de encerramento (17:00, horário de Brasília). Eleitores já na fila ainda votam.'},
         {'key': 'ext_start', 'short': 'Além filas', 't': ext_start, 'label': 'Urnas além das filas', 'desc': f'Calculado dos dados ({scope}): minuto em que 99% das urnas que encerraram antes das 18:00 já estavam encerradas. Depois dele, as urnas abertas são as que funcionaram além das filas normais (prorrogação).'},
-        {'key': 'ext_end', 'short': 'Fim prorr.', 't': last_close, 'label': 'Fim da prorrogação', 'desc': f'Calculado dos dados ({scope}): encerramento da última urna (campo DT_ENCERRAMENTO do BU, convertido para o horário de Brasília).'},
+        {'key': 'ext_end', 'short': 'Fim prorr.', 't': ext_end, 'label': 'Fim da prorrogação', 'desc': f'Calculado dos dados ({scope}): minuto em que 99,99% das urnas já estavam encerradas (DT_ENCERRAMENTO do BU, no horário de Brasília). Restavam {int((closes > ext_end).sum())} urnas abertas.'},
+        {'key': 'last_close', 'short': 'Última urna', 't': last_close, 'label': 'Última urna encerrada', 'desc': f'{last[2]} ({last[1]}), zona {last[3]}, seção {last[4]}: encerrou às {last[0]//3600:02d}:{last[0]%3600//60:02d}:{last[0]%60:02d} com {last[5]} votos.'},
         {'key': 'first_bu', 'short': '1º BU', 't': first_bu, 'label': '1º BU recebido', 'desc': 'Primeiro Boletim de Urna recebido pelo TSE (DT_BU_RECEBIDO).'},
         {'key': 'last_bu', 'short': 'Fim apur.', 't': last_bu, 'label': 'Fim da apuração', 'desc': 'Último Boletim de Urna recebido pelo TSE (DT_BU_RECEBIDO).'},
     ]

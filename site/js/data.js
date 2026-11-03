@@ -39,6 +39,10 @@ export class StateData {
     for (let i = 0; i < this.nUrna; i++) this.urnasByMun[u.m[i]].push(i);
     this.fastCache = null;
     this.munFast = new Map();
+    // pre-sorted views for the "patterns" lists (scanned until enough matches are found)
+    const share = k => (u.comp[k] ? u.manual[k] / u.comp[k] : 0);
+    this.byManualShare = [...Array(this.nUrna).keys()].sort((a, b) => share(b) - share(a));
+    this.byCloseDesc = [...Array(this.nUrna).keys()].filter(k => u.close[k] >= 0).sort((a, b) => u.close[b] - u.close[a]);
     this.lastColor = new Array(this.nMun).fill(null);   // avoid re-sending unchanged feature states to the map
     this.lastR = new Array(this.nMun).fill(-1);
   }

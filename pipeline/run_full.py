@@ -20,10 +20,12 @@ def worker(fname, idx_entry=None, raw=None):
     if raw is None:
         if not hasattr(f_local, 'f'): f_local.f = HTTPFile(URL)
         raw = f_local.f.get_member(*(idx_entry or idx[fname]))
-    voters, meta = parse(raw)
+    import re as _re
+    sec = _re.search(r'(\d{4})-log\.jez$', fname)
+    voters, meta = parse(raw, section=int(sec.group(1)) if sec else None)
     rows = {k: [v[k] for v in voters] for k in KEEP}
     for c in [c for c in KEEP if c.startswith('t_')]: rows[c] = [secs(x) for x in rows[c]]
-    meta = {k: meta[k] for k in ['model', 'open', 'close', 'files', 'contingency', 'restarts', 'urna_ids']} | {'n_mesarios': len(meta['mesarios_sec']), 'fname': fname}
+    meta = {k: meta[k] for k in ['model', 'open', 'close', 'files', 'contingency', 'restarts', 'urna_ids', 'foreign_votes']} | {'n_mesarios': len(meta['mesarios_sec']), 'fname': fname}
     return rows, meta
 
 
@@ -95,8 +97,9 @@ def batch(names):
 
 
 if __name__ == '__main__':
-    have = done_names()
-    todo = [(fn, idx[fn]) for fn in idx if fn not in have]
+    only = set(os.environ['ONLY_FILES'].split(',')) if os.environ.get('ONLY_FILES') else None   # reprocess these urnas
+    have = done_names() if only is None else set()
+    todo = [(fn, idx[fn]) for fn in idx if fn not in have and (only is None or fn in only)]
     chunks = [todo[i:i + 200] for i in range(0, len(todo), 200)]
     t0 = time.time(); done = 0; errs = []; last = 0
     with ProcessPoolExecutor(THREADS) as ex:

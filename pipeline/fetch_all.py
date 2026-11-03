@@ -10,7 +10,12 @@ ARQ = 'https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/
 def sh(*a): return subprocess.run(list(a), check=True, capture_output=True).stdout
 def log(*a): print(time.strftime('%H:%M:%S'), *a, flush=True)
 
-pkg = json.loads(sh('curl', '-sSf', '--retry', '6', '--retry-all-errors', '-m', '120', BU_PKG))['result']['resources']
+cache = os.path.join(W, 'pkg_bu.json')   # catalogue of BU files; the saved copy is used if the portal API is down
+try:
+    raw = sh('curl', '-sSf', '--retry', '6', '--retry-all-errors', '-m', '120', BU_PKG); open(cache, 'wb').write(raw)
+except subprocess.CalledProcessError:
+    log('portal API unavailable, using saved catalogue'); raw = open(cache, 'rb').read()
+pkg = json.loads(raw)['result']['resources']
 bu_url = {r['url'].split('_')[2]: r['url'] for r in pkg if '_2t_' in r['url'] and r['url'].endswith('.zip')}
 for uf in UFS:
     d = os.path.join(W, 'states', uf); os.makedirs(d, exist_ok=True)

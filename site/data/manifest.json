@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-03 13:37 UTC",
+ "generated": "2026-11-03 15:01 UTC",
  "election": {
   "label": "Eleições 2026 · 2º turno · Presidente · horário de Brasília",
   "day": "2026-10-25",
@@ -47,16 +47,23 @@
   {
    "key": "ext_start",
    "short": "Além filas",
-   "t": 61860,
+   "t": 61800,
    "label": "Urnas além das filas",
    "desc": "Calculado dos dados (todas as urnas carregadas): minuto em que 99% das urnas que encerraram antes das 18:00 já estavam encerradas. Depois dele, as urnas abertas são as que funcionaram além das filas normais (prorrogação)."
   },
   {
    "key": "ext_end",
    "short": "Fim prorr.",
-   "t": 71509,
+   "t": 69222,
    "label": "Fim da prorrogação",
-   "desc": "Calculado dos dados (todas as urnas carregadas): encerramento da última urna (campo DT_ENCERRAMENTO do BU, convertido para o horário de Brasília)."
+   "desc": "Calculado dos dados (todas as urnas carregadas): minuto em que 99,99% das urnas já estavam encerradas (DT_ENCERRAMENTO do BU, no horário de Brasília). Restavam 49 urnas abertas."
+  },
+  {
+   "key": "last_close",
+   "short": "Última urna",
+   "t": 83082,
+   "label": "Última urna encerrada",
+   "desc": "Chapada Gaúcha (MG), zona 320, seção 185: encerrou às 23:04:42 com 96 votos."
   },
   {
    "key": "first_bu",
@@ -109,7 +116,7 @@
   "fp": 39.0,
   "rel": 17.0,
   "vote_manual": 13.0,
-  "vote_bio": 11.0
+  "vote_bio": 10.0
  },
  "regions": [
   {
@@ -196,10 +203,10 @@
    "code": "13",
    "name": "Amazonas",
    "region": "N",
-   "loaded": false,
+   "loaded": true,
    "file": "data/AM.json.gz",
    "geo": "geo/AM_mun.json.gz",
-   "urnas": null
+   "urnas": 8157
   },
   {
    "uf": "RR",
@@ -236,10 +243,10 @@
    "code": "17",
    "name": "Tocantins",
    "region": "N",
-   "loaded": false,
+   "loaded": true,
    "file": "data/TO.json.gz",
    "geo": "geo/TO_mun.json.gz",
-   "urnas": null
+   "urnas": 4384
   },
   {
    "uf": "MA",
@@ -266,10 +273,10 @@
    "code": "23",
    "name": "Ceará",
    "region": "NE",
-   "loaded": false,
+   "loaded": true,
    "file": "data/CE.json.gz",
    "geo": "geo/CE_mun.json.gz",
-   "urnas": null
+   "urnas": 23765
   },
   {
    "uf": "RN",
@@ -296,10 +303,10 @@
    "code": "26",
    "name": "Pernambuco",
    "region": "NE",
-   "loaded": false,
+   "loaded": true,
    "file": "data/PE.json.gz",
    "geo": "geo/PE_mun.json.gz",
-   "urnas": null
+   "urnas": 21418
   },
   {
    "uf": "AL",
@@ -336,10 +343,10 @@
    "code": "31",
    "name": "Minas Gerais",
    "region": "SE",
-   "loaded": false,
+   "loaded": true,
    "file": "data/MG.json.gz",
    "geo": "geo/MG_mun.json.gz",
-   "urnas": null
+   "urnas": 52062
   },
   {
    "uf": "ES",
@@ -356,30 +363,30 @@
    "code": "33",
    "name": "Rio de Janeiro",
    "region": "SE",
-   "loaded": false,
+   "loaded": true,
    "file": "data/RJ.json.gz",
    "geo": "geo/RJ_mun.json.gz",
-   "urnas": null
+   "urnas": 37675
   },
   {
    "uf": "SP",
    "code": "35",
    "name": "São Paulo",
    "region": "SE",
-   "loaded": false,
+   "loaded": true,
    "file": "data/SP.json.gz",
    "geo": "geo/SP_mun.json.gz",
-   "urnas": null
+   "urnas": 103656
   },
   {
    "uf": "PR",
    "code": "41",
    "name": "Paraná",
    "region": "S",
-   "loaded": false,
+   "loaded": true,
    "file": "data/PR.json.gz",
    "geo": "geo/PR_mun.json.gz",
-   "urnas": null
+   "urnas": 27142
   },
   {
    "uf": "SC",
@@ -396,10 +403,10 @@
    "code": "43",
    "name": "Rio Grande do Sul",
    "region": "S",
-   "loaded": false,
+   "loaded": true,
    "file": "data/RS.json.gz",
    "geo": "geo/RS_mun.json.gz",
-   "urnas": null
+   "urnas": 27547
   },
   {
    "uf": "MS",
@@ -445,27 +452,36 @@
  "loaded": [
   "AC",
   "AL",
+  "AM",
   "AP",
   "BA",
+  "CE",
   "DF",
   "ES",
   "GO",
   "MA",
+  "MG",
   "MS",
   "MT",
   "PA",
   "PB",
+  "PE",
   "PI",
+  "PR",
+  "RJ",
   "RN",
   "RO",
   "RR",
+  "RS",
   "SC",
-  "SE"
+  "SE",
+  "SP",
+  "TO"
  ],
  "geo": {
   "states": "geo/br_states.json"
  },
- "validation": "192.084 de 192.091 urnas com votos do log = comparecimento do BU; 192.088 de 192.091 com habilitações manuais do log = 'não habilitados por biometria' do BU.",
+ "validation": "497.893 de 497.897 urnas com votos do log = comparecimento do BU; 497.889 de 497.897 com habilitações manuais do log = 'não habilitados por biometria' do BU.",
  "validation_by_state": [
   {
    "uf": "AC",
@@ -493,6 +509,21 @@
    "no_geometry": [],
    "tz_offsets_h": {
     "0": 102
+   }
+  },
+  {
+   "uf": "AM",
+   "urnas": 8157,
+   "with_log": 8157,
+   "ok_votes": 8157,
+   "ok_manual": 8157,
+   "recovered_votes_kept": 0,
+   "recovered_votes_dropped": 2,
+   "fuzzy_names": [],
+   "no_geometry": [],
+   "tz_offsets_h": {
+    "1": 51,
+    "2": 11
    }
   },
   {
@@ -524,6 +555,25 @@
    }
   },
   {
+   "uf": "CE",
+   "urnas": 23765,
+   "with_log": 23765,
+   "ok_votes": 23765,
+   "ok_manual": 23765,
+   "recovered_votes_kept": 0,
+   "recovered_votes_dropped": 2,
+   "fuzzy_names": [
+    [
+     "ITAPAJÉ",
+     "Itapagé"
+    ]
+   ],
+   "no_geometry": [],
+   "tz_offsets_h": {
+    "0": 184
+   }
+  },
+  {
    "uf": "DF",
    "urnas": 6969,
    "with_log": 6969,
@@ -541,8 +591,8 @@
    "uf": "ES",
    "urnas": 9844,
    "with_log": 9844,
-   "ok_votes": 9843,
-   "ok_manual": 9843,
+   "ok_votes": 9844,
+   "ok_manual": 9844,
    "recovered_votes_kept": 0,
    "recovered_votes_dropped": 11,
    "fuzzy_names": [],
@@ -555,7 +605,7 @@
    "uf": "GO",
    "urnas": 15686,
    "with_log": 15686,
-   "ok_votes": 15685,
+   "ok_votes": 15686,
    "ok_manual": 15686,
    "recovered_votes_kept": 0,
    "recovered_votes_dropped": 2,
@@ -577,6 +627,25 @@
    "no_geometry": [],
    "tz_offsets_h": {
     "0": 217
+   }
+  },
+  {
+   "uf": "MG",
+   "urnas": 52062,
+   "with_log": 52062,
+   "ok_votes": 52062,
+   "ok_manual": 52062,
+   "recovered_votes_kept": 0,
+   "recovered_votes_dropped": 10,
+   "fuzzy_names": [
+    [
+     "BRAZÓPOLIS",
+     "Brasópolis"
+    ]
+   ],
+   "no_geometry": [],
+   "tz_offsets_h": {
+    "0": 853
    }
   },
   {
@@ -641,7 +710,7 @@
    "uf": "PB",
    "urnas": 10712,
    "with_log": 10712,
-   "ok_votes": 10711,
+   "ok_votes": 10712,
    "ok_manual": 10712,
    "recovered_votes_kept": 1,
    "recovered_votes_dropped": 1,
@@ -652,10 +721,38 @@
    }
   },
   {
+   "uf": "PE",
+   "urnas": 21418,
+   "with_log": 21418,
+   "ok_votes": 21418,
+   "ok_manual": 21418,
+   "recovered_votes_kept": 0,
+   "recovered_votes_dropped": 3,
+   "fuzzy_names": [
+    [
+     "BELÉM DO SÃO FRANCISCO",
+     "Belém de São Francisco"
+    ],
+    [
+     "IGUARACY",
+     "Iguaraci"
+    ],
+    [
+     "LAGOA DE ITAENGA",
+     "Lagoa do Itaenga"
+    ]
+   ],
+   "no_geometry": [],
+   "tz_offsets_h": {
+    "0": 184,
+    "-1": 1
+   }
+  },
+  {
    "uf": "PI",
    "urnas": 10225,
    "with_log": 10225,
-   "ok_votes": 10224,
+   "ok_votes": 10225,
    "ok_manual": 10225,
    "recovered_votes_kept": 1,
    "recovered_votes_dropped": 0,
@@ -665,6 +762,39 @@
    ],
    "tz_offsets_h": {
     "0": 224
+   }
+  },
+  {
+   "uf": "PR",
+   "urnas": 27142,
+   "with_log": 27142,
+   "ok_votes": 27142,
+   "ok_manual": 27142,
+   "recovered_votes_kept": 1,
+   "recovered_votes_dropped": 3,
+   "fuzzy_names": [
+    [
+     "MUNHOZ DE MELLO",
+     "Munhoz de Melo"
+    ]
+   ],
+   "no_geometry": [],
+   "tz_offsets_h": {
+    "0": 399
+   }
+  },
+  {
+   "uf": "RJ",
+   "urnas": 37675,
+   "with_log": 37675,
+   "ok_votes": 37675,
+   "ok_manual": 37674,
+   "recovered_votes_kept": 0,
+   "recovered_votes_dropped": 3,
+   "fuzzy_names": [],
+   "no_geometry": [],
+   "tz_offsets_h": {
+    "0": 92
    }
   },
   {
@@ -719,10 +849,26 @@
    }
   },
   {
+   "uf": "RS",
+   "urnas": 27547,
+   "with_log": 27547,
+   "ok_votes": 27546,
+   "ok_manual": 27546,
+   "recovered_votes_kept": 1,
+   "recovered_votes_dropped": 3,
+   "fuzzy_names": [],
+   "no_geometry": [
+    "PINTO BANDEIRA"
+   ],
+   "tz_offsets_h": {
+    "0": 497
+   }
+  },
+  {
    "uf": "SC",
    "urnas": 17326,
    "with_log": 17326,
-   "ok_votes": 17325,
+   "ok_votes": 17326,
    "ok_manual": 17326,
    "recovered_votes_kept": 0,
    "recovered_votes_dropped": 1,
@@ -753,6 +899,43 @@
    "tz_offsets_h": {
     "0": 75
    }
+  },
+  {
+   "uf": "SP",
+   "urnas": 103656,
+   "with_log": 103655,
+   "ok_votes": 103655,
+   "ok_manual": 103652,
+   "recovered_votes_kept": 1,
+   "recovered_votes_dropped": 7,
+   "fuzzy_names": [
+    [
+     "FLORÍNEA",
+     "Florínia"
+    ],
+    [
+     "MOGI MIRIM",
+     "Moji Mirim"
+    ]
+   ],
+   "no_geometry": [],
+   "tz_offsets_h": {
+    "0": 645
+   }
+  },
+  {
+   "uf": "TO",
+   "urnas": 4384,
+   "with_log": 4384,
+   "ok_votes": 4384,
+   "ok_manual": 4384,
+   "recovered_votes_kept": 0,
+   "recovered_votes_dropped": 5,
+   "fuzzy_names": [],
+   "no_geometry": [],
+   "tz_offsets_h": {
+    "0": 139
+   }
   }
  ],
  "discrepancies": [
@@ -765,35 +948,9 @@
    "log_votes": 204,
    "bu_manual": 33,
    "log_manual": 21,
-   "contingency": false,
-   "restarts": 0,
-   "note": "Urna original falhou antes de receber votos (log: 'Device open error /dev/uescan' às 07:48 e 'GAP erro 72 | Validação do VOTA' às 09:54). A urna de contingência ficou pronta às 10:10. O BU registra 217 comparecimentos; os logs publicados registram 204 votos, todos a partir das 10:12. 13 votos não têm registro nos logs publicados; os dados não informam como foram colhidos."
-  },
-  {
-   "uf": "ES",
-   "zona": "9",
-   "secao": "85",
-   "municipio": "Santa Maria de Jetibá",
-   "bu_votes": 308,
-   "log_votes": 595,
-   "bu_manual": 11,
-   "log_manual": 23,
-   "contingency": false,
-   "restarts": 6,
-   "note": ""
-  },
-  {
-   "uf": "GO",
-   "zona": "19",
-   "secao": "615",
-   "municipio": "Luziânia",
-   "bu_votes": 297,
-   "log_votes": 296,
-   "bu_manual": 18,
-   "log_manual": 18,
    "contingency": true,
-   "restarts": 5,
-   "note": ""
+   "restarts": 10,
+   "note": "Urna original falhou antes de receber votos (log: 'Device open error /dev/uescan' às 07:48 e 'GAP erro 72 | Validação do VOTA' às 09:54). A urna de contingência ficou pronta às 10:10. O BU registra 217 comparecimentos; os logs publicados registram 204 votos, todos a partir das 10:12. 13 votos não têm registro nos logs publicados; os dados não informam como foram colhidos."
   },
   {
    "uf": "MA",
@@ -809,43 +966,82 @@
    "note": ""
   },
   {
-   "uf": "PB",
-   "zona": "17",
-   "secao": "85",
-   "municipio": "Campina Grande",
-   "bu_votes": 296,
-   "log_votes": 295,
-   "bu_manual": 18,
-   "log_manual": 18,
-   "contingency": false,
-   "restarts": 2,
-   "note": ""
-  },
-  {
-   "uf": "PI",
-   "zona": "63",
-   "secao": "345",
-   "municipio": "Teresina",
-   "bu_votes": 265,
-   "log_votes": 263,
-   "bu_manual": 15,
-   "log_manual": 15,
+   "uf": "RJ",
+   "zona": "214",
+   "secao": "279",
+   "municipio": "Rio de Janeiro",
+   "bu_votes": 276,
+   "log_votes": 276,
+   "bu_manual": 24,
+   "log_manual": 23,
    "contingency": false,
    "restarts": 3,
    "note": ""
   },
   {
-   "uf": "SC",
-   "zona": "97",
-   "secao": "375",
-   "municipio": "Itajaí",
-   "bu_votes": 282,
-   "log_votes": 281,
-   "bu_manual": 19,
-   "log_manual": 19,
+   "uf": "RS",
+   "zona": "17",
+   "secao": "191",
+   "municipio": "Boa Vista do Incra",
+   "bu_votes": 92,
+   "log_votes": 91,
+   "bu_manual": 12,
+   "log_manual": 11,
    "contingency": true,
-   "restarts": 10,
+   "restarts": 5,
    "note": ""
+  },
+  {
+   "uf": "SP",
+   "zona": "63",
+   "secao": "80",
+   "municipio": "Jaú",
+   "bu_votes": 241,
+   "log_votes": 241,
+   "bu_manual": 24,
+   "log_manual": 23,
+   "contingency": false,
+   "restarts": 2,
+   "note": ""
+  },
+  {
+   "uf": "SP",
+   "zona": "63",
+   "secao": "220",
+   "municipio": "Jaú",
+   "bu_votes": 236,
+   "log_votes": 236,
+   "bu_manual": 16,
+   "log_manual": 15,
+   "contingency": false,
+   "restarts": 2,
+   "note": ""
+  },
+  {
+   "uf": "SP",
+   "zona": "63",
+   "secao": "179",
+   "municipio": "Jaú",
+   "bu_votes": 251,
+   "log_votes": 251,
+   "bu_manual": 5,
+   "log_manual": 4,
+   "contingency": false,
+   "restarts": 2,
+   "note": ""
+  },
+  {
+   "uf": "SP",
+   "zona": "395",
+   "secao": "298",
+   "municipio": "Guarulhos",
+   "bu_votes": 268,
+   "log_votes": 0,
+   "bu_manual": 26,
+   "log_manual": 0,
+   "contingency": false,
+   "restarts": 0,
+   "note": "O log desta urna não está no pacote publicado pelo TSE."
   }
  ],
  "sources": [
@@ -885,6 +1081,17 @@
    "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 1876467424 bytes; ETag \"6fd89ee0-65ec3c14dd0c0\"; Last-Modified Mon, 26 Oct 2026 19:58:35 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
   },
   {
+   "label": "TSE · Boletim de Urna · AM · 2º turno · bweb_2t_AM_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_AM_261020260742.zip",
+   "sha512": "c87f558d88f478afaed40d452855e34eb99772fb4214b2c913824fd5adb816d324c6c040ab35d5e17e953e0d752b882c27304bd3c9139a9f96a765e2356c5ce8",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · AM · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_AM.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 2140254436 bytes; ETag \"7f91b0e4-65ec4c3275640\"; Last-Modified Mon, 26 Oct 2026 21:10:41 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
    "label": "TSE · Boletim de Urna · AP · 2º turno · bweb_2t_AP_261020260742.zip",
    "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_AP_261020260742.zip",
    "sha512": "66f56ba91e90cd715994bba078014e57a9124e5667d5047b84cedeaf67dfbfc86a0c85537d65c49810817a73d0eaab6222fecdbb57d9077cc6a1da18a6d21cd6",
@@ -905,6 +1112,17 @@
    "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · BA · 2º turno",
    "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_BA.zip",
    "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 9211995695 bytes; ETag \"22513e62f-65ec3ef23d300\"; Last-Modified Mon, 26 Oct 2026 20:11:24 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
+   "label": "TSE · Boletim de Urna · CE · 2º turno · bweb_2t_CE_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_CE_261020260742.zip",
+   "sha512": "4d0abf43322e353074782f533a728513924e7820898b8b3ef1ebbe45771dd61504e031f0efc62071442632669a11e1523890b5b49a196a04cc25884124e76357",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · CE · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_CE.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 5908815459 bytes; ETag \"160315e63-65ec4e2ec4580\"; Last-Modified Mon, 26 Oct 2026 21:19:34 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
   },
   {
    "label": "TSE · Boletim de Urna · DF · 2º turno · bweb_2t_DF_261020260742.zip",
@@ -951,6 +1169,17 @@
    "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 4254857478 bytes; ETag \"fd9bf906-65ec431100b80\"; Last-Modified Mon, 26 Oct 2026 20:29:50 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
   },
   {
+   "label": "TSE · Boletim de Urna · MG · 2º turno · bweb_2t_MG_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_MG_261020260742.zip",
+   "sha512": "b2123700c7a520ccfb0e1be9aa3bab205c9c5f5b64cd537c80a1eaca69a9b96a67c440c88ca2a0f30f63aeed72a1c9dfca0e5ede8358eca1c64698e0c8054bb9",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · MG · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_MG.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 12591095192 bytes; ETag \"2ee7cdd98-65ec46bd53600\"; Last-Modified Mon, 26 Oct 2026 20:46:16 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
    "label": "TSE · Boletim de Urna · MS · 2º turno · bweb_2t_MS_261020260742.zip",
    "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_MS_261020260742.zip",
    "sha512": "c16d211246f35c9d1e7dfef39e6f718522987873d5304144744d9ba98783320710060844ca212800204c53d144d7cdea777aead343d817033fb5b49ada518db1",
@@ -995,6 +1224,17 @@
    "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 2678479040 bytes; ETag \"9fa658c0-65ec497e174c0\"; Last-Modified Mon, 26 Oct 2026 20:58:35 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
   },
   {
+   "label": "TSE · Boletim de Urna · PE · 2º turno · bweb_2t_PE_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_PE_261020260742.zip",
+   "sha512": "5002c264cf9fff1b27bbbbc75d89b5aec5856b59a2888fef2b8c1577fe041bf60bcd6a4d8943023382579921d7f89926608aa7e550beb8581718cea1873f645a",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · PE · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_PE.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 5668750144 bytes; ETag \"151e24340-65ec4af01ddc0\"; Last-Modified Mon, 26 Oct 2026 21:05:03 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
    "label": "TSE · Boletim de Urna · PI · 2º turno · bweb_2t_PI_261020260742.zip",
    "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_PI_261020260742.zip",
    "sha512": "d864c6f671daf94d0c3a8464b74052f1827fe6ac43a7666bc1d4cd37f3a4375ccb51ccc83ef04832487349a40e1d73b72e2ab0934b99d62465422b80c4499b54",
@@ -1004,6 +1244,28 @@
    "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · PI · 2º turno",
    "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_PI.zip",
    "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 2402070716 bytes; ETag \"8f2cb0bc-65ec4f331ebc0\"; Last-Modified Mon, 26 Oct 2026 21:24:07 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
+   "label": "TSE · Boletim de Urna · PR · 2º turno · bweb_2t_PR_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_PR_261020260742.zip",
+   "sha512": "949659949df4605749afdd1842d0f628bb4563d41f73578786702f679ee81276d7a4f5a4e52fe5292e681a75a7662d7925c1a15e76f0118b5870c29dbd20b3f5",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · PR · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_PR.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 6778665283 bytes; ETag \"1940a3943-65ec50bee5180\"; Last-Modified Mon, 26 Oct 2026 21:31:02 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
+   "label": "TSE · Boletim de Urna · RJ · 2º turno · bweb_2t_RJ_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_RJ_261020260742.zip",
+   "sha512": "dcb3131b618b9c394b50576ead626a85ebb115c9f984f9b464d21a64eb69a735f11123fb189a3f8b906c29f9511557f46565cc1d4adc10a68fa0ebf69a70a205",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · RJ · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_RJ.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 9637646040 bytes; ETag \"23e72ced8-65ec4931cc0c0\"; Last-Modified Mon, 26 Oct 2026 20:57:15 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
   },
   {
    "label": "TSE · Boletim de Urna · RN · 2º turno · bweb_2t_RN_261020260742.zip",
@@ -1039,6 +1301,17 @@
    "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 325077964 bytes; ETag \"13604bcc-65ec276bc9240\"; Last-Modified Mon, 26 Oct 2026 18:26:09 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
   },
   {
+   "label": "TSE · Boletim de Urna · RS · 2º turno · bweb_2t_RS_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_RS_261020260742.zip",
+   "sha512": "39f0c7e216972216d52a1868c2396d72115453953227aa301cb92692421c171e5a24e8493a57f125ddf2096a7ea6d6b34ce1aa7a042ef26a4c550e3336a27cee",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · RS · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_RS.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 6804732142 bytes; ETag \"19597f8ee-65ec2e0c5f500\"; Last-Modified Mon, 26 Oct 2026 18:55:48 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
    "label": "TSE · Boletim de Urna · SC · 2º turno · bweb_2t_SC_261020260742.zip",
    "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_SC_261020260742.zip",
    "sha512": "01b1e9638654fa6914ad4d8a9001de33cb4fc5386d280ccdea7576d7c993c04e9162075db0a1fed8f571e87ce5349151e6a44bc4d5300b3e828a0123c6b90c8e",
@@ -1059,6 +1332,28 @@
    "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · SE · 2º turno",
    "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_SE.zip",
    "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 1452351183 bytes; ETag \"56911ecf-65ec224e64100\"; Last-Modified Mon, 26 Oct 2026 18:03:16 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
+   "label": "TSE · Boletim de Urna · SP · 2º turno · bweb_2t_SP_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_SP_261020260742.zip",
+   "sha512": "3078f38754ced92476fd0e9c6661ecf5237774fc210d5e7eee1b55db9b8ddb321843f591440c2d350679326e1f1b86e60ac723c8ac65a92ca94b74ce674ecffe",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · SP · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_SP.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 25758064523 bytes; ETag \"5ff4cdf8b-65ec3647fe180\"; Last-Modified Mon, 26 Oct 2026 19:32:38 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
+   "label": "TSE · Boletim de Urna · TO · 2º turno · bweb_2t_TO_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_TO_261020260742.zip",
+   "sha512": "e667f9b68bb71065fec219cbf18b4621b0062ced6b09dec227d32f8621c9b6697b55d216bce0920de30eea37c16bc42a3a684d71bdb49051c68d850f1f74b0ef",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · TO · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_TO.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 1020216357 bytes; ETag \"3ccf4425-65ec235d3c000\"; Last-Modified Mon, 26 Oct 2026 18:08:00 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
   }
  ]
 }

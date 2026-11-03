@@ -19,6 +19,7 @@ NAME_ALIASES = {
     'PB': {'JOCACLAUDINO': 'SANTAREM', 'SAOVICENTEDOSERIDO': 'SERIDO', 'TACIMA': 'CAMPODESANTANA'},
     'RN': {'ASSU': 'ACU', 'AREZ': 'ARES', 'CAMPOGRANDE': 'AUGUSTOSEVERO', 'BOASAUDE': 'JANUARIOCICCO', 'SERRACAIADA': 'PRESIDENTEJUSCELINO'},
     'GO': {'BOMJESUS': 'BOMJESUSDEGOIAS'},
+    'SP': {'EMBUDASARTES': 'EMBU'},
 }
 VOTE_T0, VOTE_STEP, FAST_STEP = 8 * 3600, 120, 600
 VOTE_END = 21 * 3600                      # last vote bucket edge (21:00 Brasília)
@@ -51,12 +52,19 @@ def dump_gz(obj, path):
 
 
 def load_logs(d):
-    frames, metas = [], []
-    for p in sorted(glob.glob(os.path.join(d, 'batch_*.parquet'))):
-        frames.append(pq.read_table(p).to_pandas())
-    for p in sorted(glob.glob(os.path.join(d, 'meta_*.jsonl'))):
-        metas += [json.loads(l) for l in open(p)]
+    # batches are read oldest first; if an urna was reprocessed, only its newest batch is kept
+    frames, metas, owner = [], [], {}
+    batches = sorted(glob.glob(os.path.join(d, 'batch_*.parquet')), key=os.path.getmtime)
+    for p in batches:
+        mp = p.replace('batch_', 'meta_').replace('.parquet', '.jsonl')
+        for l in open(mp):
+            m = json.loads(l); owner[m['fname']] = p; metas.append(m)
+    metas = list({m['fname']: m for m in metas}.values())
+    for p in batches:
+        df = pq.read_table(p).to_pandas()
+        frames.append(df[df.fname.map(owner).values == p])
     old = sorted(glob.glob(os.path.join(d, '*-log.jez.parquet')))
+    old = [p for p in old if os.path.basename(p)[:-8] not in owner]   # reprocessed in a newer batch
     for p in old:                                   # older one-file-per-urna format (meta in schema metadata)
         t = pq.read_table(p); fn = os.path.basename(p)[:-8]
         m = json.loads(t.schema.metadata[b'meta']); m['fname'] = fn; metas.append(m)
@@ -170,6 +178,11 @@ def main():
                      'contingency': bool(c.get('contingency', False)) if len(c) else False,
                      'restarts': int(c.get('restarts', 0) or 0) if len(c) else 0,
                      'note': notes.get(f'{r.NR_ZONA}/{r.NR_SECAO}', '')})
+    for i in np.where(~has_log)[0]:
+        r = u.iloc[i]
+        mism.append({'uf': uf, 'zona': str(r.NR_ZONA), 'secao': str(r.NR_SECAO), 'municipio': munis.display[r.m],
+                     'bu_votes': int(bu_v[i]), 'log_votes': 0, 'bu_manual': int(bu_m[i]), 'log_manual': 0, 'contingency': False, 'restarts': 0,
+                     'note': notes.get(f'{r.NR_ZONA}/{r.NR_SECAO}', 'O log desta urna não está no pacote publicado pelo TSE.')})
     val = {'urnas': int(nU), 'with_log': int(has_log.sum()), 'ok_votes': int(okv.sum()), 'ok_manual': int(okm.sum()),
            'recovered_votes_kept': int(V.recovered.sum()), 'recovered_votes_dropped': dropped_recovered, 'mismatch': mism,
            'fuzzy_names': fuzzy, 'no_geometry': nogeo, 'tz_offsets_h': {str(k // 3600): int(v) for k, v in munis.tz.value_counts().items()}}

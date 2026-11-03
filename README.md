@@ -17,9 +17,14 @@ estimates, weights or interprets results.
 Why the map is **not** red/blue during voting: the urna log records *that* a voter voted, never *for whom*, and the
 RDV stores votes shuffled on purpose. Any minute-by-minute candidate colouring would be fabricated.
 
-Timeline markers: official opening (08:00) and regular closing (17:00); **"Urnas além das filas"** = the minute by
-which 99% of urnas that closed before 18:00 had closed (data-derived start of the extension window); **"Fim da
-prorrogação"** = last urna closed; first and last BU received.
+Timeline markers (all times in Brasília time): official opening (08:00) and regular closing (17:00);
+**"Urnas além das filas"** = the minute by which 99% of urnas that closed before 18:00 had closed (data-derived start
+of the extension window); **"Fim da prorrogação"** = the minute by which 99.99% of all urnas had closed;
+**"Última urna encerrada"** names the very last urna; first and last BU received.
+
+Urna clocks run on local time. The pipeline derives each municipality's offset from the data (urnas open at 08:00
+Brasília, so the local opening hour gives the offset), which covers Acre, western Amazonas, MT, MS, RO, RR and
+Fernando de Noronha without a hand-made table.
 
 ### "Fast votes"
 
@@ -32,19 +37,26 @@ evidence of wrongdoing.
 ## Data and verification
 
 For every urna the pipeline checks the log against the BU of the same section: number of voters and number of
-"não habilitados por biometria". The result is written to `site/data/<UF>/validation.json` and shown in the site's
-"Sobre" dialog. Mesário título numbers that appear in the logs are never published (in-memory salted hashes only).
+"não habilitados por biometria". Results per state are in `site/data/<UF>/summary.json` and in the site's "Sobre"
+dialog, which lists every urna where log and BU differ. Log-reading rules learned from the data:
 
-## Running the pipeline for a state
+- packages of replaced (contingency) urnas contain archived logs, sometimes twice: exact duplicate lines are dropped;
+- a package can include the log of an urna loaded for *another* section: only votes from urnas loaded for the
+  package's own section are counted;
+- a vote confirmed right before an urna restart has no "computado" line; the BU sometimes counts it and sometimes
+  not, so per urna the pipeline follows the BU and reports how many such votes were dropped.
+
+Mesário título numbers that appear in the logs are never published (in-memory salted hashes only).
+
+## Running the pipeline
 
 ```bash
-pip install pandas pyarrow shapely
-# 1. index the remote zip, then parse every urna log (range requests; the 9 GB file is never stored)
-python pipeline/index_zip.py <arqurnatot zip URL> <index.pkl>
-python pipeline/run_full.py <workdir> <arqurnatot zip URL> <index.pkl> <out_dir>
-# 2. build the site data (BU CSV + parsed logs + municipal boundaries)
-python pipeline/build_site_data.py --uf BA --bweb bweb_2t_BA_*.csv --logs <out_dir> \
-  --geo-mun ba_mun.json --states-geo br_states_raw.json --sources pipeline/sources/BA_2t.json --out site/
+pip install pandas pyarrow shapely && npm install mapshaper@0.6.102
+# 1. per state: download + verify the BU CSV (SHA-512), index the urna-files zip and parse every urna log
+#    (HTTP range requests; the multi-GB zips are never stored). Resumable.
+python pipeline/fetch_all.py <workdir> RR,AP,AC,...,SP 4
+# 2. build each state's site data (municipal shapes, sources) and the national manifest
+python pipeline/build_all.py <workdir> site node_modules/mapshaper/bin/mapshaper
 ```
 
-Status: Bahia (2nd round) is loaded; other states appear as "not loaded yet" until processed.
+Status: all 27 states, 2nd round (Presidente). Votes abroad (`ZZ`) are not mapped.

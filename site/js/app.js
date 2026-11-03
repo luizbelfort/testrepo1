@@ -1,7 +1,7 @@
-import { getJSON, setDataVersion, StateData, sumOver } from './data.js?v=20261103b';
-import { Timeline } from './timeline.js?v=20261103b';
-import { areaChart } from './charts.js?v=20261103b';
-import { COLORS, seq, diverging, DIVERGING_SPAN, METRIC_DOMAINS, fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103b';
+import { getJSON, setDataVersion, StateData, sumOver } from './data.js?v=20261103c';
+import { Timeline } from './timeline.js?v=20261103c';
+import { areaChart } from './charts.js?v=20261103c';
+import { COLORS, seq, diverging, DIVERGING_SPAN, METRIC_DOMAINS, fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103c';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -234,18 +234,20 @@ function phaseLabel() {
   return 'apuração concluída';
 }
 
+const PERF = new URLSearchParams(location.search).has('perf') ? (window.__perf = {}) : null;
+const timed = (k, f) => { if (!PERF) return f(); const a = performance.now(); const r = f(); PERF[k] = (PERF[k] || 0) + performance.now() - a; return r; };
 function render(full = true) {
-  for (const [uf, sd] of loaded) snaps.set(uf, sd.snapshot(S.t, S.th));
+  timed('snapshot', () => { for (const [uf, sd] of loaded) snaps.set(uf, sd.snapshot(S.t, S.th)); });
   $('#tl-time').textContent = hhmm(S.t);
   $('#tl-phase').textContent = phaseLabel();
-  paintMap();
+  timed('paintMap', paintMap);
   renderLegend();
   crumbs();
   const now = performance.now();
   clearTimeout(panelTimer);
-  if (full || now - lastPanel > 150) { lastPanel = now; renderPanel(); }
+  if (full || now - lastPanel > 150) { lastPanel = now; timed('panel', renderPanel); }
   else panelTimer = setTimeout(() => { lastPanel = performance.now(); renderPanel(); }, 160);
-  if (full) updateTimelineContext();
+  if (full) timed('timelineCtx', updateTimelineContext);
 }
 
 function munValue(uf, i) {
@@ -418,7 +420,10 @@ function countCard(a) {
     <p class="note">Cada urna entra na soma no horário em que o TSE registrou o recebimento do seu Boletim de Urna (campo <code>DT_BU_RECEBIDO</code>).</p></div>`;
 }
 
-function drawCharts() {
+const seriesCache = new Map();   // series do not depend on time: cache per (scope, filter, loaded states)
+function scopeSeries() {
+  const key = `${JSON.stringify(S.sel)}|${S.manualOnly}|${loaded.size}`;
+  if (seriesCache.has(key)) return seriesCache.get(key);
   const T = M.time, votes = new Float64Array(T.vote_n), manual = new Float64Array(T.vote_n);
   for (const uf of scopeStates()) {
     const sd = loaded.get(uf); if (!sd) continue;
@@ -426,6 +431,11 @@ function drawCharts() {
     const v = sd.seriesFor(idx, S.manualOnly ? 'manual' : 'votes'), m = sd.seriesFor(idx, 'manual');
     for (let j = 0; j < v.length; j++) { votes[j] += v[j]; manual[j] += m[j]; }
   }
+  if (seriesCache.size > 50) seriesCache.clear();
+  const r = { votes, manual }; seriesCache.set(key, r); return r;
+}
+function drawCharts() {
+  const T = M.time, { votes, manual } = scopeSeries();
   areaChart($('#ch-votes'), { series: votes, t0: T.vote_t0, step: T.vote_step, cursor: S.t, color: '#1baf7a', label: S.manualOnly ? 'Votos sem biometria' : 'Votos' });
   areaChart($('#ch-manual'), { series: manual, t0: T.vote_t0, step: T.vote_step, cursor: S.t, color: '#9a9890', label: 'Votos sem biometria' });
 }
@@ -479,10 +489,16 @@ function renderPatterns() {
   for (const uf of scopeStates()) {
     const sd = loaded.get(uf); if (!sd) continue;
     const u = sd.u, set = new Set(scopeMunis(uf)), snap = snaps.get(uf);
-    for (let k = 0; k < sd.nUrna; k++) {
-      if (!set.has(u.m[k]) || u.close[k] < 0 || u.close[k] > t) continue;
-      urnaItems.push({ uf, k, v: u.comp[k] ? u.manual[k] / u.comp[k] : 0 });
-      lateItems.push({ uf, k, v: u.close[k] });
+    const all = set.size === sd.nMun;
+    let n = 0;
+    for (const k of sd.byManualShare) {          // highest share first; stop after 6 closed urnas in scope
+      if (u.close[k] < 0 || u.close[k] > t || (!all && !set.has(u.m[k]))) continue;
+      urnaItems.push({ uf, k, v: u.comp[k] ? u.manual[k] / u.comp[k] : 0 }); if (++n >= 6) break;
+    }
+    n = 0;
+    for (const k of sd.byCloseDesc) {            // latest closing first, among urnas closed by time t
+      if (u.close[k] > t || (!all && !set.has(u.m[k]))) continue;
+      lateItems.push({ uf, k, v: u.close[k] }); if (++n >= 6) break;
     }
     if (sel.level !== 'muni') for (const i of set) if (snap.manual[i] >= 30) munItems.push({ uf, i, v: snap.fast[i] / snap.manual[i], n: snap.fast[i], m: snap.manual[i] });
   }
