@@ -1,7 +1,7 @@
-import { getJSON, StateData, sumOver } from './data.js';
-import { Timeline } from './timeline.js';
-import { areaChart } from './charts.js';
-import { COLORS, seq, diverging, DIVERGING_SPAN, METRIC_DOMAINS, fmtInt, pct, hhmm, hhmmss } from './scales.js';
+import { getJSON, setDataVersion, StateData, sumOver } from './data.js?v=20261103b';
+import { Timeline } from './timeline.js?v=20261103b';
+import { areaChart } from './charts.js?v=20261103b';
+import { COLORS, seq, diverging, DIVERGING_SPAN, METRIC_DOMAINS, fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103b';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -24,6 +24,7 @@ init().catch(err => {
 
 async function init() {
   M = await getJSON('data/manifest.json');
+  setDataVersion(M.generated);
   $('#election-name').textContent = M.election.label;
   S.th = { ...M.fast_bins.defaults };
   S.t = M.time.vote_t0;
@@ -46,13 +47,20 @@ async function init() {
 // Load every processed state in the background (4 at a time); the map fills in as they arrive.
 async function loadAllStates() {
   const queue = M.states.filter(s => s.loaded).map(s => s.uf);
-  const total = queue.length; let done = 0;
-  const status = () => { $('#election-name').textContent = done < total ? `${M.election.label} · carregando estados ${done}/${total}…` : M.election.label; };
+  const total = queue.length; let done = 0; const failed = [];
+  const status = () => {
+    $('#election-name').textContent = (done < total ? `${M.election.label} · carregando estados ${done}/${total}…` : M.election.label)
+      + (failed.length ? ` · falha ao carregar: ${failed.join(', ')}` : '');
+  };
+  if (typeof DecompressionStream === 'undefined') {
+    $('#election-name').textContent = 'Este navegador não consegue abrir os dados (sem DecompressionStream). Use uma versão recente do Chrome, Edge, Firefox ou Safari.';
+    return;
+  }
   status();
   const next = async () => {
     while (queue.length) {
       const uf = queue.shift();
-      try { await loadState(uf); } catch (e) { console.error(uf, e); }
+      try { await loadState(uf); } catch (e) { console.error(uf, e); failed.push(uf); }
       done++; status(); scheduleFull();
     }
   };

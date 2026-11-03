@@ -1,8 +1,13 @@
 // Loading and time-aware aggregation. All numbers shown on the site come from these functions,
 // computed from the TSE files exactly as published (see pipeline/).
 
+// The manifest is always fetched fresh; every other data file is tagged with the manifest's build time,
+// so a new build is never mixed with files cached from an older one.
+let dataVersion = '';
+export function setDataVersion(v) { dataVersion = encodeURIComponent(v || ''); }
 export async function getJSON(url) {
-  const r = await fetch(url);
+  const fresh = url.endsWith('manifest.json');
+  const r = await fetch(fresh ? url : `${url}?v=${dataVersion}`, fresh ? { cache: 'no-store' } : {});
   if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
   if (!url.endsWith('.gz')) return r.json();
   // data files are gzip-compressed JSON; servers deliver them as plain bytes, so decompress here
