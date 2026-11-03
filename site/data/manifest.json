@@ -1,0 +1,459 @@
+{
+ "generated": "2026-11-03 03:29 UTC",
+ "election": {
+  "label": "Eleições 2026 · 2º turno · Presidente · horário de Brasília",
+  "day": "2026-10-25",
+  "candidates": [
+   {
+    "key": "lula",
+    "name": "Lula",
+    "short": "Lula",
+    "number": 13,
+    "party": "PT"
+   },
+   {
+    "key": "flavio",
+    "name": "Flávio Bolsonaro",
+    "short": "Flávio",
+    "number": 22,
+    "party": "PL"
+   }
+  ]
+ },
+ "time": {
+  "start": 27000,
+  "end": 85500,
+  "vote_t0": 28800,
+  "vote_step": 120,
+  "vote_n": 345,
+  "fast_step": 600,
+  "fast_n": 69
+ },
+ "markers": [
+  {
+   "key": "open",
+   "short": "Abertura",
+   "t": 28800,
+   "label": "Início da votação",
+   "desc": "Horário oficial de abertura (08:00, horário de Brasília)."
+  },
+  {
+   "key": "close_regular",
+   "short": "Encerr.",
+   "t": 61200,
+   "label": "Encerramento regular",
+   "desc": "Horário oficial de encerramento (17:00). Eleitores já na fila ainda votam."
+  },
+  {
+   "key": "ext_start",
+   "short": "Além filas",
+   "t": 62002,
+   "label": "Urnas além das filas",
+   "desc": "Calculado dos dados: horário em que 99% das urnas que encerraram antes das 18:00 já estavam encerradas. Depois dele, as urnas abertas são as que funcionaram além das filas normais (prorrogação)."
+  },
+  {
+   "key": "ext_end",
+   "short": "Fim prorr.",
+   "t": 71509,
+   "label": "Fim da prorrogação",
+   "desc": "Calculado dos dados: encerramento da última urna (campo DT_ENCERRAMENTO do BU)."
+  },
+  {
+   "key": "first_bu",
+   "short": "1º BU",
+   "t": 61510,
+   "label": "1º BU recebido",
+   "desc": "Primeiro Boletim de Urna recebido pelo TSE (DT_BU_RECEBIDO)."
+  },
+  {
+   "key": "last_bu",
+   "short": "Fim apur.",
+   "t": 84100,
+   "label": "Fim da apuração",
+   "desc": "Último Boletim de Urna recebido pelo TSE (DT_BU_RECEBIDO)."
+  }
+ ],
+ "fast_bins": {
+  "fp": [
+   20,
+   25,
+   30,
+   40,
+   60,
+   null
+  ],
+  "rel": [
+   5,
+   8,
+   10,
+   15,
+   20,
+   null
+  ],
+  "vote": [
+   3,
+   4,
+   5,
+   6,
+   8,
+   10,
+   null
+  ],
+  "defaults": {
+   "fp": 2,
+   "rel": 2,
+   "vote": 2
+  }
+ },
+ "fast_medians": {
+  "fp": 38.0,
+  "rel": 18.0,
+  "vote_manual": 13.0,
+  "vote_bio": 10.0
+ },
+ "regions": [
+  {
+   "key": "N",
+   "name": "Norte",
+   "ufs": [
+    "RO",
+    "AC",
+    "AM",
+    "RR",
+    "PA",
+    "AP",
+    "TO"
+   ]
+  },
+  {
+   "key": "NE",
+   "name": "Nordeste",
+   "ufs": [
+    "MA",
+    "PI",
+    "CE",
+    "RN",
+    "PB",
+    "PE",
+    "AL",
+    "SE",
+    "BA"
+   ]
+  },
+  {
+   "key": "CO",
+   "name": "Centro-Oeste",
+   "ufs": [
+    "MS",
+    "MT",
+    "GO",
+    "DF"
+   ]
+  },
+  {
+   "key": "SE",
+   "name": "Sudeste",
+   "ufs": [
+    "MG",
+    "ES",
+    "RJ",
+    "SP"
+   ]
+  },
+  {
+   "key": "S",
+   "name": "Sul",
+   "ufs": [
+    "PR",
+    "SC",
+    "RS"
+   ]
+  }
+ ],
+ "states": [
+  {
+   "uf": "RO",
+   "code": "11",
+   "name": "Rondônia",
+   "region": "N",
+   "loaded": false,
+   "file": "data/RO.json",
+   "geo": "geo/RO_mun.json"
+  },
+  {
+   "uf": "AC",
+   "code": "12",
+   "name": "Acre",
+   "region": "N",
+   "loaded": false,
+   "file": "data/AC.json",
+   "geo": "geo/AC_mun.json"
+  },
+  {
+   "uf": "AM",
+   "code": "13",
+   "name": "Amazonas",
+   "region": "N",
+   "loaded": false,
+   "file": "data/AM.json",
+   "geo": "geo/AM_mun.json"
+  },
+  {
+   "uf": "RR",
+   "code": "14",
+   "name": "Roraima",
+   "region": "N",
+   "loaded": false,
+   "file": "data/RR.json",
+   "geo": "geo/RR_mun.json"
+  },
+  {
+   "uf": "PA",
+   "code": "15",
+   "name": "Pará",
+   "region": "N",
+   "loaded": false,
+   "file": "data/PA.json",
+   "geo": "geo/PA_mun.json"
+  },
+  {
+   "uf": "AP",
+   "code": "16",
+   "name": "Amapá",
+   "region": "N",
+   "loaded": false,
+   "file": "data/AP.json",
+   "geo": "geo/AP_mun.json"
+  },
+  {
+   "uf": "TO",
+   "code": "17",
+   "name": "Tocantins",
+   "region": "N",
+   "loaded": false,
+   "file": "data/TO.json",
+   "geo": "geo/TO_mun.json"
+  },
+  {
+   "uf": "MA",
+   "code": "21",
+   "name": "Maranhão",
+   "region": "NE",
+   "loaded": false,
+   "file": "data/MA.json",
+   "geo": "geo/MA_mun.json"
+  },
+  {
+   "uf": "PI",
+   "code": "22",
+   "name": "Piauí",
+   "region": "NE",
+   "loaded": false,
+   "file": "data/PI.json",
+   "geo": "geo/PI_mun.json"
+  },
+  {
+   "uf": "CE",
+   "code": "23",
+   "name": "Ceará",
+   "region": "NE",
+   "loaded": false,
+   "file": "data/CE.json",
+   "geo": "geo/CE_mun.json"
+  },
+  {
+   "uf": "RN",
+   "code": "24",
+   "name": "Rio Grande do Norte",
+   "region": "NE",
+   "loaded": false,
+   "file": "data/RN.json",
+   "geo": "geo/RN_mun.json"
+  },
+  {
+   "uf": "PB",
+   "code": "25",
+   "name": "Paraíba",
+   "region": "NE",
+   "loaded": false,
+   "file": "data/PB.json",
+   "geo": "geo/PB_mun.json"
+  },
+  {
+   "uf": "PE",
+   "code": "26",
+   "name": "Pernambuco",
+   "region": "NE",
+   "loaded": false,
+   "file": "data/PE.json",
+   "geo": "geo/PE_mun.json"
+  },
+  {
+   "uf": "AL",
+   "code": "27",
+   "name": "Alagoas",
+   "region": "NE",
+   "loaded": false,
+   "file": "data/AL.json",
+   "geo": "geo/AL_mun.json"
+  },
+  {
+   "uf": "SE",
+   "code": "28",
+   "name": "Sergipe",
+   "region": "NE",
+   "loaded": false,
+   "file": "data/SE.json",
+   "geo": "geo/SE_mun.json"
+  },
+  {
+   "uf": "BA",
+   "code": "29",
+   "name": "Bahia",
+   "region": "NE",
+   "loaded": true,
+   "file": "data/BA.json",
+   "geo": "geo/BA_mun.json"
+  },
+  {
+   "uf": "MG",
+   "code": "31",
+   "name": "Minas Gerais",
+   "region": "SE",
+   "loaded": false,
+   "file": "data/MG.json",
+   "geo": "geo/MG_mun.json"
+  },
+  {
+   "uf": "ES",
+   "code": "32",
+   "name": "Espírito Santo",
+   "region": "SE",
+   "loaded": false,
+   "file": "data/ES.json",
+   "geo": "geo/ES_mun.json"
+  },
+  {
+   "uf": "RJ",
+   "code": "33",
+   "name": "Rio de Janeiro",
+   "region": "SE",
+   "loaded": false,
+   "file": "data/RJ.json",
+   "geo": "geo/RJ_mun.json"
+  },
+  {
+   "uf": "SP",
+   "code": "35",
+   "name": "São Paulo",
+   "region": "SE",
+   "loaded": false,
+   "file": "data/SP.json",
+   "geo": "geo/SP_mun.json"
+  },
+  {
+   "uf": "PR",
+   "code": "41",
+   "name": "Paraná",
+   "region": "S",
+   "loaded": false,
+   "file": "data/PR.json",
+   "geo": "geo/PR_mun.json"
+  },
+  {
+   "uf": "SC",
+   "code": "42",
+   "name": "Santa Catarina",
+   "region": "S",
+   "loaded": false,
+   "file": "data/SC.json",
+   "geo": "geo/SC_mun.json"
+  },
+  {
+   "uf": "RS",
+   "code": "43",
+   "name": "Rio Grande do Sul",
+   "region": "S",
+   "loaded": false,
+   "file": "data/RS.json",
+   "geo": "geo/RS_mun.json"
+  },
+  {
+   "uf": "MS",
+   "code": "50",
+   "name": "Mato Grosso do Sul",
+   "region": "CO",
+   "loaded": false,
+   "file": "data/MS.json",
+   "geo": "geo/MS_mun.json"
+  },
+  {
+   "uf": "MT",
+   "code": "51",
+   "name": "Mato Grosso",
+   "region": "CO",
+   "loaded": false,
+   "file": "data/MT.json",
+   "geo": "geo/MT_mun.json"
+  },
+  {
+   "uf": "GO",
+   "code": "52",
+   "name": "Goiás",
+   "region": "CO",
+   "loaded": false,
+   "file": "data/GO.json",
+   "geo": "geo/GO_mun.json"
+  },
+  {
+   "uf": "DF",
+   "code": "53",
+   "name": "Distrito Federal",
+   "region": "CO",
+   "loaded": false,
+   "file": "data/DF.json",
+   "geo": "geo/DF_mun.json"
+  }
+ ],
+ "loaded": [
+  "BA"
+ ],
+ "geo": {
+  "states": "geo/br_states.json"
+ },
+ "validation": "BA: 35475 de 35476 urnas com votos do log = comparecimento do BU; 35475 de 35476 com habilitações manuais do log = 'não habilitados por biometria' do BU.",
+ "sources": [
+  {
+   "label": "TSE · Boletim de Urna (BU na Web) · BA · 2º turno · bweb_2t_BA_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_BA_261020260742.zip",
+   "sha512": "15db0c47b3b445ccbc1dd15ef77291e1bb5fe1af20a3e444381f7c32057794ed97e0c901cb46ea09cc7172a5d3d25cfe6435910e3f3fbdb8479c0c599f46e5c3",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."
+  },
+  {
+   "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · BA · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_BA.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 9.211.995.695 bytes; ETag \"22513e62f-65ec3ef23d300\"; Last-Modified 26/10/2026 20:11:24 GMT. Os logs foram lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
+   "label": "Portal de Dados Abertos do TSE · Resultados 2026",
+   "url": "https://dadosabertos.tse.jus.br/dataset/resultados-2026-arquivos-transmitidos-para-totalizacao"
+  },
+  {
+   "label": "Malhas municipais (geodata-br, derivadas do IBGE)",
+   "url": "https://github.com/tbrugz/geodata-br",
+   "note": "Simplificadas com mapshaper para a web."
+  }
+ ],
+ "discrepancies": [
+  {
+   "zona": "173",
+   "secao": "235",
+   "bu_votes": 217,
+   "log_votes": 204,
+   "bu_manual": 33,
+   "log_manual": 21,
+   "uf": "BA",
+   "note": "Urna original falhou antes de receber votos (log: 'Device open error /dev/uescan' às 07:48 e 'GAP erro 72 | Validação do VOTA' às 09:54). A urna de contingência ficou pronta às 10:10. O BU registra 217 comparecimentos; os logs publicados registram 204 votos, todos a partir das 10:12. 13 votos não têm registro nos logs publicados; os dados não informam como foram colhidos."
+  }
+ ]
+}

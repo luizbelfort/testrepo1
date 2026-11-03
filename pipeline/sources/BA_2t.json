@@ -1,0 +1,13 @@
+[
+  {"label": "TSE · Boletim de Urna (BU na Web) · BA · 2º turno · bweb_2t_BA_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_BA_261020260742.zip",
+   "sha512": "15db0c47b3b445ccbc1dd15ef77291e1bb5fe1af20a3e444381f7c32057794ed97e0c901cb46ea09cc7172a5d3d25cfe6435910e3f3fbdb8479c0c599f46e5c3",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido."},
+  {"label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · BA · 2º turno",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_BA.zip",
+   "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 9.211.995.695 bytes; ETag \"22513e62f-65ec3ef23d300\"; Last-Modified 26/10/2026 20:11:24 GMT. Os logs foram lidos diretamente do servidor do TSE, urna por urna."},
+  {"label": "Portal de Dados Abertos do TSE · Resultados 2026",
+   "url": "https://dadosabertos.tse.jus.br/dataset/resultados-2026-arquivos-transmitidos-para-totalizacao"},
+  {"label": "Malhas municipais (geodata-br, derivadas do IBGE)",
+   "url": "https://github.com/tbrugz/geodata-br", "note": "Simplificadas com mapshaper para a web."}
+]

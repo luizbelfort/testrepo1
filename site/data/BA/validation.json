@@ -1,0 +1,16 @@
+{
+ "urnas": 35476,
+ "ok_votes": 35475,
+ "ok_manual": 35475,
+ "missing_log": 0,
+ "mismatch": [
+  {
+   "zona": "173",
+   "secao": "235",
+   "bu_votes": 217,
+   "log_votes": 204,
+   "bu_manual": 33,
+   "log_manual": 21
+  }
+ ]
+}
