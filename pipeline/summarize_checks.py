@@ -92,6 +92,10 @@ def tallies(res, by=None):
 def flags(A):
     A = A.copy()
     A['turnout'] = A.comp / A.aptos.clip(lower=1)
+    from scipy import stats
+    g = A.groupby(['uf', 'ibge'])
+    ref = (g.unreg.transform('sum') / g.failed.transform('sum').clip(lower=1)).clip(1e-6, 1 - 1e-6)
+    A['p_unreg_high'] = stats.binom.sf(A.unreg - 1, A.failed, ref)
     F = {
         'falha_biometria_alta': ('Falha de leitura da digital muito acima do município (p < 1e-7) e ≥ 30% dos eleitores',
                                  (A.p_failed_high < 1e-7) & (A.failed_rate >= 0.30)),
@@ -101,8 +105,8 @@ def flags(A):
                           A.fast >= 3),
         'comparecimento_alto': ('Comparecimento ≥ 97% (com ≥ 50 aptos) ou 4+ desvios-padrão acima do município',
                                 ((A.turnout >= 0.97) & (A.aptos >= 50)) | (A.turnout_z >= 4)),
-        'liberacao_digital_nao_cadastrada': ('10 ou mais liberações com digital não cadastrada na urna (mesário/terceiro)',
-                                             A.unreg >= 10),
+        'liberacao_digital_nao_cadastrada': ('Liberações confirmadas com digital não cadastrada muito acima do município (p < 1e-10) e ≥ 20',
+                                             (A.p_unreg_high < 1e-10) & (A.unreg >= 20)),
         'falha_dados': ('5 ou mais falhas de conferência de dados do eleitor', A.data_fail >= 5),
         'habilitado_sem_voto': ('3 ou mais eleitores habilitados que não concluíram o voto', A.hab_no_vote >= 3),
     }
@@ -171,6 +175,7 @@ def main():
             'by_model': [{'model': str(k), 'urnas': int(len(G)), 'failed_rate': float(G.failed.sum() / G.n.sum()),
                           'noask_rate': float(G.noask.sum() / G.n.sum()), 'lula_share': float(G.lula.sum() / max(1, (G.lula + G.flavio).sum()))}
                          for k, G in A.groupby('model')],
+            'unreg_urnas_any': int((A.unreg > 0).sum()),
             'totals': {'failed': int(A.failed.sum()), 'noask': int(A.noask.sum()), 'bio': int(A.bio.sum()), 'fast': int(A.fast.sum()),
                        'unreg': int(A.unreg.sum()), 'data_fail': int(A.data_fail.sum()), 'hab_no_vote': int(A.hab_no_vote.sum())},
         }

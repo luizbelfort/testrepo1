@@ -49,6 +49,15 @@ def index(uf, path):
     return groups
 
 
+def runs(members, gap=65536):
+    """Group an urna's members into contiguous byte runs (most urnas: one run; some have files far apart in the zip)."""
+    ms = sorted(members, key=lambda m: m[1]); out = []
+    for m in ms:
+        if out and m[1] - (out[-1][-1][1] + out[-1][-1][2] + 1024) <= gap: out[-1].append(m)
+        else: out.append([m])
+    return out
+
+
 def split_members(blob, base, members):
     out = {}
     for suf, off, csz in members:
@@ -62,16 +71,19 @@ def split_members(blob, base, members):
 
 
 def fetch(url, urnas, tmp):
-    cfg = []
-    for i, (key, members) in enumerate(urnas):
-        lo = min(o for _, o, _ in members); hi = max(o + c for _, o, c in members) + 1024
-        cfg.append(('next\n' if i else '') + f'url = "{url}"\nrange = {lo}-{hi}\noutput = "{tmp}/{i}"\n')
+    cfg = []; parts = []
+    for key, members in urnas:
+        for run in runs(members):
+            lo = run[0][1]; hi = max(o + c for _, o, c in run) + 1024; i = len(parts)
+            parts.append((key, lo, run))
+            cfg.append(('next\n' if i else '') + f'url = "{url}"\nrange = {lo}-{hi}\noutput = "{tmp}/{i}"\n')
     open(f'{tmp}/c.cfg', 'w').write(''.join(cfg))
     subprocess.run(['curl', '-sS', '--retry', '5', '--retry-all-errors', '-m', '900', '--parallel', '--parallel-max', '8', '-K', f'{tmp}/c.cfg'], capture_output=True)
     out = {}
-    for i, (key, members) in enumerate(urnas):
+    for i, (key, lo, run) in enumerate(parts):
+        if isinstance(out.get(key), Exception): continue
         try:
-            out[key] = split_members(open(f'{tmp}/{i}', 'rb').read(), min(o for _, o, _ in members), members)
+            out.setdefault(key, {}).update(split_members(open(f'{tmp}/{i}', 'rb').read(), lo, run))
         except Exception as e:
             out[key] = e
     return out
