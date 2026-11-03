@@ -77,11 +77,13 @@ def load_logs(d):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--uf', required=True); ap.add_argument('--bweb', required=True); ap.add_argument('--logs', required=True)
-    ap.add_argument('--geo-mun', required=True); ap.add_argument('--out', required=True)
+    ap.add_argument('--uf', required=True); ap.add_argument('--bweb', required=True); ap.add_argument('--logs', default=None)
+    ap.add_argument('--geo-mun', default=None); ap.add_argument('--out', required=True)
     ap.add_argument('--day', default='2026-10-25'); ap.add_argument('--cargo', default='Presidente')
     ap.add_argument('--sources', default=None); ap.add_argument('--notes', default=None)
+    ap.add_argument('--abroad', action='store_true', help='votes abroad (ZZ): BU only, no logs, no shapes')
     a = ap.parse_args()
+    if a.abroad: return build_abroad(a)
     uf = a.uf
     out_data = os.path.join(a.out, 'data'); fast_dir = os.path.join(out_data, uf, 'fast')
     os.makedirs(fast_dir, exist_ok=True); os.makedirs(os.path.join(a.out, 'geo'), exist_ok=True)
@@ -255,6 +257,63 @@ def main():
     }
     json.dump(summary, open(os.path.join(out_data, uf, 'summary.json'), 'w'), ensure_ascii=False)
     print(json.dumps({k: v for k, v in val.items() if k not in ('mismatch',)} | {'mismatch': len(mism)}, ensure_ascii=False))
+
+
+def build_abroad(a):
+    """Votes abroad. Only the BU is used: urna clocks abroad run on each city's local time (dozens of time zones,
+    not identified in the TSE data), so voting-hour activity cannot be placed on the Brasília timeline. The BU
+    receipt time (TSE server, Brasília) still places each urna in the count."""
+    uf = 'ZZ'
+    out_data = os.path.join(a.out, 'data'); fast_dir = os.path.join(out_data, uf, 'fast'); os.makedirs(fast_dir, exist_ok=True)
+    for old in glob.glob(os.path.join(fast_dir, '*')): os.remove(old)
+    bw = pd.read_csv(a.bweb, sep=';', encoding='latin1', dtype=str)
+    bw = bw[bw.DS_CARGO_PERGUNTA == a.cargo]
+    for c in ['QT_APTOS', 'QT_COMPARECIMENTO', 'QT_VOTOS', 'QT_ELEI_BIOM_SEM_HABILITACAO']: bw[c] = pd.to_numeric(bw[c])
+    key = ['NR_ZONA', 'NR_SECAO']
+    pv = bw.pivot_table(index=key, columns='NM_VOTAVEL', values='QT_VOTOS', aggfunc='sum', fill_value=0)
+    u = bw.drop_duplicates(key).set_index(key)[['CD_MUNICIPIO', 'NM_MUNICIPIO', 'NR_LOCAL_VOTACAO', 'QT_APTOS', 'QT_COMPARECIMENTO',
+                                              'QT_ELEI_BIOM_SEM_HABILITACAO', 'DT_BU_RECEBIDO']].join(pv).reset_index()
+    for c in ['LULA', 'FLAVIO BOLSONARO', 'Branco', 'Nulo']:
+        if c not in u.columns: u[c] = 0
+    u['recv'] = secs_of_day(u.DT_BU_RECEBIDO, a.day)
+    munis = u.groupby('CD_MUNICIPIO').agg(name=('NM_MUNICIPIO', 'first'), aptos=('QT_APTOS', 'sum'), urnas=('NR_SECAO', 'size')).reset_index()
+    munis['display'] = munis.name.str.title()
+    munis = munis.sort_values('display').reset_index(drop=True)
+    u['m'] = u.CD_MUNICIPIO.map({c: i for i, c in enumerate(munis.CD_MUNICIPIO)})
+    nM, nU = len(munis), len(u)
+    n_vote = (VOTE_END - VOTE_T0) // VOTE_STEP; n_fast = (VOTE_END - VOTE_T0) // FAST_STEP
+    zeros = lambda: [[0] * n_vote for _ in range(nM)]
+    ids = [f'ZZ{c}' for c in munis.CD_MUNICIPIO]
+    for mi in range(nM):
+        us = u.index[u.m == mi].tolist()
+        dump_gz({'manual': {'u': [], 'tb': [], 'fp': [], 'rel': [], 'vote': [], 'n': []},
+                 'series': {'u': us, 'votes': [[0] * n_fast for _ in us], 'manual': [[0] * n_fast for _ in us]}},
+                os.path.join(fast_dir, f'{ids[mi]}.json.gz'))
+    neg = [-1] * nU
+    state = {
+        'uf': uf, 'abroad': True,
+        'munis': {'ibge': ids, 'tse': munis.CD_MUNICIPIO.tolist(), 'name': munis.display.tolist(),
+                  'aptos': munis.aptos.astype(int).tolist(), 'urnas': munis.urnas.astype(int).tolist(),
+                  'lon': [None] * nM, 'lat': [None] * nM, 'tz': [None] * nM},
+        'series': {'votes': zeros(), 'manual': zeros(), 'nofp': zeros()},
+        'urnas': {'m': u.m.astype(int).tolist(), 'z': u.NR_ZONA.astype(int).tolist(), 's': u.NR_SECAO.astype(int).tolist(),
+                  'loc': u.NR_LOCAL_VOTACAO.astype(int).tolist(), 'aptos': u.QT_APTOS.astype(int).tolist(),
+                  'comp': u.QT_COMPARECIMENTO.astype(int).tolist(), 'manual': u.QT_ELEI_BIOM_SEM_HABILITACAO.clip(lower=0).astype(int).tolist(),
+                  'nofp': [0] * nU, 'open': neg, 'close': neg, 'recv': u.recv.astype(int).tolist(),
+                  'lula': u['LULA'].astype(int).tolist(), 'flavio': u['FLAVIO BOLSONARO'].astype(int).tolist(),
+                  'branco': u['Branco'].astype(int).tolist(), 'nulo': u['Nulo'].astype(int).tolist(), 'model': [-1] * nU},
+        'models': [],
+        'fast': {'manual': {'m': [], 'tb': [], 'fp': [], 'rel': [], 'vote': [], 'n': []}, 'bio': {'m': [], 'tb': [], 'vote': [], 'n': []}},
+    }
+    dump_gz(state, os.path.join(out_data, f'{uf}.json.gz'))
+    recv = u.recv[u.recv >= 0].values
+    summary = {'uf': uf, 'abroad': True, 'urnas': int(nU), 'aptos': int(u.QT_APTOS.sum()), 'comparecimento': int(u.QT_COMPARECIMENTO.sum()),
+               'cities': int(nM), 'normal_close_hist': {}, 'last_close': None,
+               'first_bu': int(recv.min()) if len(recv) else None, 'last_bu': int(recv.max()) if len(recv) else None,
+               'phase_hist': {}, 'validation': None, 'discrepancies': [], 'sources': json.load(open(a.sources)) if a.sources else []}
+    json.dump(summary, open(os.path.join(out_data, uf, 'summary.json'), 'w'), ensure_ascii=False)
+    print(json.dumps({'uf': uf, 'urnas': int(nU), 'cities': int(nM), 'comparecimento': int(u.QT_COMPARECIMENTO.sum()),
+                      'lula': int(u['LULA'].sum()), 'flavio': int(u['FLAVIO BOLSONARO'].sum())}))
 
 
 if __name__ == '__main__':

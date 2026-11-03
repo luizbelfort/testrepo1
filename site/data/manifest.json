@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-03 15:01 UTC",
+ "generated": "2026-11-03 15:08 UTC",
  "election": {
   "label": "Eleições 2026 · 2º turno · Presidente · horário de Brasília",
   "day": "2026-10-25",
@@ -49,14 +49,14 @@
    "short": "Além filas",
    "t": 61800,
    "label": "Urnas além das filas",
-   "desc": "Calculado dos dados (todas as urnas carregadas): minuto em que 99% das urnas que encerraram antes das 18:00 já estavam encerradas. Depois dele, as urnas abertas são as que funcionaram além das filas normais (prorrogação)."
+   "desc": "Calculado dos dados (todas as urnas no Brasil): minuto em que 99% das urnas que encerraram antes das 18:00 já estavam encerradas. Depois dele, as urnas abertas são as que funcionaram além das filas normais (prorrogação)."
   },
   {
    "key": "ext_end",
    "short": "Fim prorr.",
    "t": 69222,
    "label": "Fim da prorrogação",
-   "desc": "Calculado dos dados (todas as urnas carregadas): minuto em que 99,99% das urnas já estavam encerradas (DT_ENCERRAMENTO do BU, no horário de Brasília). Restavam 49 urnas abertas."
+   "desc": "Calculado dos dados (todas as urnas no Brasil): minuto em que 99,99% das urnas já estavam encerradas (DT_ENCERRAMENTO do BU, no horário de Brasília). Restavam 49 urnas abertas."
   },
   {
    "key": "last_close",
@@ -447,6 +447,22 @@
    "file": "data/DF.json.gz",
    "geo": "geo/DF_mun.json.gz",
    "urnas": 6969
+  },
+  {
+   "uf": "ZZ",
+   "code": "ZZ",
+   "name": "Exterior",
+   "region": null,
+   "loaded": true,
+   "abroad": true,
+   "file": "data/ZZ.json.gz",
+   "geo": null,
+   "urnas": 1308,
+   "cities": 144,
+   "lonlat": [
+    -27.5,
+    -21.0
+   ]
   }
  ],
  "loaded": [
@@ -476,12 +492,13 @@
   "SC",
   "SE",
   "SP",
-  "TO"
+  "TO",
+  "ZZ"
  ],
  "geo": {
   "states": "geo/br_states.json"
  },
- "validation": "497.893 de 497.897 urnas com votos do log = comparecimento do BU; 497.889 de 497.897 com habilitações manuais do log = 'não habilitados por biometria' do BU.",
+ "validation": "No Brasil, 497.893 de 497.897 urnas com votos do log = comparecimento do BU; 497.889 de 497.897 com habilitações manuais do log = 'não habilitados por biometria' do BU. Exterior (1.308 urnas em 144 cidades): só o BU é usado.",
  "validation_by_state": [
   {
    "uf": "AC",
@@ -1354,6 +1371,12 @@
    "label": "TSE · Arquivos transmitidos para totalização (BU, RDV, log, assinaturas) · TO · 2º turno",
    "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/arqurnatot/bu_imgbu_logjez_rdv_vscmr_2026_2t_TO.zip",
    "note": "O TSE não publica SHA-512 para este arquivo. Tamanho 1020216357 bytes; ETag \"3ccf4425-65ec235d3c000\"; Last-Modified Mon, 26 Oct 2026 18:08:00 GMT. Logs lidos diretamente do servidor do TSE, urna por urna."
+  },
+  {
+   "label": "TSE · Boletim de Urna · Exterior (ZZ) · 2º turno · bweb_2t_ZZ_261020260742.zip",
+   "url": "https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/buweb/bweb_2t_ZZ_261020260742.zip",
+   "sha512": "e024547f7d2c6e21e53c8a4f47823d7c76684976271ef395f7c66fe953caf49aa2c585b104f724cc2c39eb67f682e05a7e479f9558c3e38244036a3f90b429f1",
+   "note": "SHA-512 publicado pelo TSE (arquivo .sha512) e conferido. Exterior: apenas o BU é usado (os horários das urnas no exterior estão no fuso local de cada cidade)."
   }
  ]
 }

@@ -183,3 +183,10 @@ table.grid tr.sel td { background: #2a2a20; }
 .modal details { margin: 8px 0; color: var(--text-secondary); }
 .modal summary { cursor: pointer; color: var(--text-primary); }
 .modal details table.grid { margin-top: 8px; }
+
+/* votes abroad: one circle off the coast */
+.abroad-dot { background: none; border: 0; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.abroad-circle { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #0a0a0b; box-shadow: 0 0 0 1px var(--line-strong); display: block; }
+.abroad-dot.novote .abroad-circle { background-image: repeating-linear-gradient(45deg, transparent 0 5px, rgba(255,255,255,.08) 5px 10px); }
+.abroad-dot.sel .abroad-circle { box-shadow: 0 0 0 2px var(--text-primary); }
+.abroad-label { font-size: 11px; color: var(--text-secondary); background: rgba(10,10,11,.8); padding: 1px 6px; border-radius: 999px; }

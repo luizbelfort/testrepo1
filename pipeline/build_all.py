@@ -69,8 +69,12 @@ for d in sorted(glob.glob(os.path.join(W, 'states', '*'))):
     uf = os.path.basename(d)
     if ONLY and uf not in ONLY: continue
     st = json.load(open(os.path.join(d, 'status.json'))) if os.path.exists(os.path.join(d, 'status.json')) else {}
+    bweb = glob.glob(os.path.join(d, 'bu', 'bweb_2t_*.csv'))[0] if glob.glob(os.path.join(d, 'bu', 'bweb_2t_*.csv')) else None
+    if uf == 'ZZ' and bweb:   # votes abroad: BU only
+        args = [sys.executable, '-I', os.path.join(HERE, 'build_site_data.py'), '--uf', 'ZZ', '--abroad', '--bweb', bweb, '--out', SITE,
+                '--sources', os.path.join(d, 'sources.json')]
+        print(uf, sh(*args).strip(), flush=True); continue
     if not st.get('logs'): print(uf, 'logs not ready, skipped', flush=True); continue
-    bweb = glob.glob(os.path.join(d, 'bu', 'bweb_2t_*.csv'))[0]
     args = [sys.executable, '-I', os.path.join(HERE, 'build_site_data.py'), '--uf', uf, '--bweb', bweb, '--logs', os.path.join(d, 'logs'),
             '--geo-mun', prep_geo(uf, d), '--out', SITE, '--sources', sources(uf, d)]
     notes = os.path.join(HERE, 'sources', f'{uf}_2t_notes.json')

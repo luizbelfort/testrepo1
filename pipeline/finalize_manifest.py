@@ -29,6 +29,9 @@ GENERAL_SOURCES = [
 ]
 
 
+def br(n): return f'{n:,}'.replace(',', '.')
+
+
 def median_from_hist(h):
     h = np.asarray(h); c = np.cumsum(h)
     return float(np.searchsorted(c, c[-1] / 2)) if c[-1] else None
@@ -38,15 +41,16 @@ def main():
     out = sys.argv[1]
     sums = {json.load(open(p))['uf']: json.load(open(p)) for p in glob.glob(os.path.join(out, 'data', '*', 'summary.json'))}
     loaded = sorted(sums)
+    domestic = [uf for uf in loaded if not sums[uf].get('abroad')]
     hist = {}
     for s in sums.values():
-        for k, v in s['normal_close_hist'].items(): hist[int(k)] = hist.get(int(k), 0) + v
+        for k, v in (s['normal_close_hist'] or {}).items(): hist[int(k)] = hist.get(int(k), 0) + v
     mins = np.repeat(np.array(sorted(hist)), [hist[k] for k in sorted(hist)])
     ext_start = int(np.percentile(mins, 99) * 60) if len(mins) else 17 * 3600
     # all closing times (Brasília) from the state files, to place the end of the extension robustly
     import gzip
     closes, last = [], None
-    for uf in loaded:
+    for uf in domestic:
         d = json.load(gzip.open(os.path.join(out, 'data', f'{uf}.json.gz')))
         u = d['urnas']
         for k, c in enumerate(u['close']):
@@ -58,7 +62,7 @@ def main():
     last_close = last[0]
     first_bu = min(s['first_bu'] for s in sums.values() if s['first_bu'])
     last_bu = max(s['last_bu'] for s in sums.values() if s['last_bu'])
-    scope = 'todas as urnas carregadas' if len(loaded) > 1 else f'urnas de {loaded[0]}'
+    scope = 'todas as urnas no Brasil' if len(domestic) > 1 else f'urnas de {domestic[0]}'
     markers = [
         {'key': 'open', 'short': 'Abertura', 't': 8 * 3600, 'label': 'Início da votação', 'desc': 'Horário oficial de abertura (08:00, horário de Brasília).'},
         {'key': 'close_regular', 'short': 'Encerr.', 't': 17 * 3600, 'label': 'Encerramento regular', 'desc': 'Horário oficial de encerramento (17:00, horário de Brasília). Eleitores já na fila ainda votam.'},
@@ -70,9 +74,9 @@ def main():
     ]
     ph = {}
     for s in sums.values():
-        for k, v in s['phase_hist'].items(): ph[k] = np.add(ph.get(k, 0), v)
+        for k, v in (s['phase_hist'] or {}).items(): ph[k] = np.add(ph.get(k, 0), v)
     val_lines, tot = [], {'urnas': 0, 'ok_votes': 0, 'ok_manual': 0}
-    for uf in loaded:
+    for uf in domestic:
         v = sums[uf]['validation']
         for k in tot: tot[k] += v[k]
         val_lines.append({'uf': uf, **v})
@@ -91,11 +95,15 @@ def main():
         'regions': [{'key': k, 'name': n, 'ufs': [s for c, s, _, r in STATES if r == k]} for k, n in REGIONS],
         'states': [{'uf': s, 'code': c, 'name': n, 'region': r, 'loaded': s in sums,
                     'file': f'data/{s}.json.gz', 'geo': f'geo/{s}_mun.json.gz',
-                    'urnas': sums[s]['urnas'] if s in sums else None} for c, s, n, r in STATES],
+                    'urnas': sums[s]['urnas'] if s in sums else None} for c, s, n, r in STATES]
+                  + ([{'uf': 'ZZ', 'code': 'ZZ', 'name': 'Exterior', 'region': None, 'loaded': True, 'abroad': True,
+                       'file': 'data/ZZ.json.gz', 'geo': None, 'urnas': sums['ZZ']['urnas'], 'cities': sums['ZZ']['cities'],
+                       'lonlat': [-27.5, -21.0]}] if 'ZZ' in sums else []),
         'loaded': loaded,
         'geo': {'states': 'geo/br_states.json'},
-        'validation': (f"{tot['ok_votes']:,} de {tot['urnas']:,} urnas com votos do log = comparecimento do BU; "
-                       f"{tot['ok_manual']:,} de {tot['urnas']:,} com habilitações manuais do log = 'não habilitados por biometria' do BU.").replace(',', '.'),
+        'validation': (f"No Brasil, {br(tot['ok_votes'])} de {br(tot['urnas'])} urnas com votos do log = comparecimento do BU; "
+                       f"{br(tot['ok_manual'])} de {br(tot['urnas'])} com habilitações manuais do log = 'não habilitados por biometria' do BU."
+                       + (f" Exterior ({br(sums['ZZ']['urnas'])} urnas em {sums['ZZ']['cities']} cidades): só o BU é usado." if 'ZZ' in sums else '')),
         'validation_by_state': val_lines,
         'discrepancies': [d for uf in loaded for d in sums[uf]['discrepancies']],
         'sources': sources,

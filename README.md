@@ -12,7 +12,13 @@ estimates, weights or interprets results.
 | Phase | Map colour | Source |
 |---|---|---|
 | Voting day (08:00 → last urna closed) | Neutral teal scale: turnout, share of votes without biometrics, or share of "fast" votes, as of the selected minute | Urna logs (`logd.dat`), one event per voter with timestamp |
-| Count (first → last BU received) | Red (Lula) ↔ blue (Flávio Bolsonaro) with a grey midpoint; each urna is added at the minute the TSE received its Boletim de Urna | BU files (`DT_BU_RECEBIDO`) |
+| Count (first → last BU received) | Red (Lula) ↔ blue (Flávio Bolsonaro) with a light neutral midpoint; each urna is added at the minute the TSE received its Boletim de Urna | BU files (`DT_BU_RECEBIDO`) |
+
+On every scale a **darker shade means more** (more turnout, more votes without biometrics, a larger lead).
+
+**Votes abroad** (`ZZ`, 1,308 urnas in 144 cities) appear as one circle off the coast and are included in the
+national totals. Only their BU is used: urna clocks abroad run on each city's local time and the TSE files do not
+identify the time zone, so they join the timeline at the count (BU receipt time is TSE server time, Brasília).
 
 Why the map is **not** red/blue during voting: the urna log records *that* a voter voted, never *for whom*, and the
 RDV stores votes shuffled on purpose. Any minute-by-minute candidate colouring would be fabricated.
@@ -59,4 +65,4 @@ python pipeline/fetch_all.py <workdir> RR,AP,AC,...,SP 4
 python pipeline/build_all.py <workdir> site node_modules/mapshaper/bin/mapshaper
 ```
 
-Status: all 27 states, 2nd round (Presidente). Votes abroad (`ZZ`) are not mapped.
+Status: all 27 states + votes abroad, 2nd round (Presidente).

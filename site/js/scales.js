@@ -15,16 +15,17 @@ function ramp(stops) {
 
 export const COLORS = {
   noData: '#18181b',
-  uncounted: '#26262a',
-  mid: '#383835',
+  uncounted: '#34343a',
+  mid: '#e4e2dc',
   amber: '#fab219',
   lula: '#e5484d',
   flavio: '#3987e5',
 };
 
-export const seq = ramp(['#16201d', '#124d3f', '#168a63', '#3fc792', '#b8f0d6']);
-const redArm = ramp(['#383835', '#6b2b2c', '#b83a3d', '#f26b6d']);
-const blueArm = ramp(['#383835', '#24456f', '#2f6fbd', '#5aa2f5']);
+// Darker always means MORE: light = little / close to a tie, dark = a lot / a large lead.
+export const seq = ramp(['#e3f4ec', '#a6dcc4', '#4fb38d', '#1a7a5c', '#0b4434']);
+const redArm = ramp(['#e4e2dc', '#f0b3ae', '#de5f5c', '#b0242b', '#6e0d16']);
+const blueArm = ramp(['#e4e2dc', '#b4cbee', '#5a91de', '#2257b5', '#0e2f6b']);
 
 // share = Lula share of valid votes (0..1). Full colour is reached at a 60-point margin (80/20).
 export const DIVERGING_SPAN = 0.3;

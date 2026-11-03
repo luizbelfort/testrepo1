@@ -1,7 +1,7 @@
-import { getJSON, setDataVersion, StateData, sumOver } from './data.js?v=20261103c';
-import { Timeline } from './timeline.js?v=20261103c';
-import { areaChart } from './charts.js?v=20261103c';
-import { COLORS, seq, diverging, DIVERGING_SPAN, METRIC_DOMAINS, fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103c';
+import { getJSON, setDataVersion, StateData, sumOver } from './data.js?v=20261103d';
+import { Timeline } from './timeline.js?v=20261103d';
+import { areaChart } from './charts.js?v=20261103d';
+import { COLORS, seq, diverging, DIVERGING_SPAN, METRIC_DOMAINS, fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103d';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -69,8 +69,10 @@ async function loadAllStates() {
 let fullTimer = 0;
 function scheduleFull() { clearTimeout(fullTimer); fullTimer = setTimeout(() => render(), 250); }
 
+let abroadEl = null;
 async function loadState(uf) {
   const st = M.states.find(s => s.uf === uf);
+  if (st.abroad) return loadAbroad(st);
   const [raw, geo] = await Promise.all([getJSON(st.file), getJSON(st.geo)]);
   const sd = new StateData(M, raw);
   snaps.set(uf, sd.snapshot(S.t, S.th));   // snapshot first: other code assumes every loaded state has one
@@ -90,6 +92,34 @@ async function loadState(uf) {
     'circle-stroke-color': '#0a0a0b', 'circle-stroke-width': 1 } });
   for (const ev of ['mousemove', 'click']) map.on(ev, `mun-${uf}-fill`, e => onMunEvent(ev, uf, e));
   map.on('mouseleave', `mun-${uf}-fill`, clearHover);
+}
+
+// Votes abroad: one circle off the coast; BU data only (no shapes, no voting-hour timestamps).
+async function loadAbroad(st) {
+  const raw = await getJSON(st.file);
+  const sd = new StateData(M, raw);
+  snaps.set(st.uf, sd.snapshot(S.t, S.th));
+  loaded.set(st.uf, sd);
+  abroadEl = document.createElement('button');
+  abroadEl.type = 'button'; abroadEl.className = 'abroad-dot';
+  abroadEl.innerHTML = '<span class="abroad-circle"></span><span class="abroad-label">Exterior</span>';
+  abroadEl.addEventListener('click', e => { e.stopPropagation(); select({ level: 'state', uf: st.uf }); });
+  abroadEl.addEventListener('mousemove', e => {
+    const r = $('#map').getBoundingClientRect(); showTip({ x: e.clientX - r.left, y: e.clientY - r.top }, abroadTooltip());
+  });
+  abroadEl.addEventListener('mouseleave', () => { $('#tooltip').hidden = true; });
+  new maplibregl.Marker({ element: abroadEl }).setLngLat(st.lonlat).addTo(map);
+}
+function abroadAgg() {
+  const sd = loaded.get('ZZ'); if (!sd) return null;
+  return sumOver(snaps.get('ZZ'), [...Array(sd.nMun).keys()]);
+}
+function abroadTooltip() {
+  const a = abroadAgg(), st = M.states.find(s => s.uf === 'ZZ'), c = M.election.candidates, valid = a.lula + a.flavio;
+  const row = (l, v) => `<div class="tt-row">${l}<b>${v}</b></div>`;
+  return `<div class="tt-title">Exterior · ${fmtInt(st.cities)} cidades</div>` + row('Urnas apuradas', `${fmtInt(a.counted)}/${fmtInt(st.urnas)}`) +
+    row(esc(c[0].name), pct(valid ? a.lula / valid : null)) + row(esc(c[1].name), pct(valid ? a.flavio / valid : null)) +
+    (effectiveMode() === 'vote' ? '<div class="tt-row">Horários de votação no fuso local de cada cidade: só entra na apuração</div>' : '');
 }
 
 // ---------------------------------------------------------------- map
@@ -171,13 +201,15 @@ function bboxOf(features) {
 
 function select(sel, { fly = true } = {}) {
   const prev = S.sel;
-  if (prev.level === 'muni') map.setFeatureState({ source: `mun-${prev.uf}`, id: prev.ibge }, { sel: false });
+  if (prev.level === 'muni' && prev.uf !== 'ZZ') map.setFeatureState({ source: `mun-${prev.uf}`, id: prev.ibge }, { sel: false });
   if (prev.uf && stateFeat.has(prev.uf)) map.setFeatureState({ source: 'states', id: prev.uf }, { sel: false });
   const changed = JSON.stringify(prev) !== JSON.stringify(sel);
   S.sel = sel; if (sel.level !== 'muni') S.selUrna = null;
   if (changed) document.querySelector('.panel-scroll').scrollTop = 0;
-  if (sel.level === 'muni') map.setFeatureState({ source: `mun-${sel.uf}`, id: sel.ibge }, { sel: true });
-  if (sel.level === 'state') map.setFeatureState({ source: 'states', id: sel.uf }, { sel: true });
+  if (sel.level === 'muni' && sel.uf !== 'ZZ') map.setFeatureState({ source: `mun-${sel.uf}`, id: sel.ibge }, { sel: true });
+  if (sel.level === 'state' && stateFeat.has(sel.uf)) map.setFeatureState({ source: 'states', id: sel.uf }, { sel: true });
+  if (abroadEl) abroadEl.classList.toggle('sel', sel.uf === 'ZZ');
+  if (fly && sel.uf === 'ZZ') fly = false;   // no shapes abroad: keep the current view
   if (fly) {
     let feats;
     if (sel.level === 'country') feats = statesGeo.features;
@@ -273,6 +305,7 @@ function paintMap() {
   let fastMax = 1;
   for (const [uf, s] of snaps) for (const v of s.fast) fastMax = Math.max(fastMax, v);
   for (const [uf, sd] of loaded) {
+    if (sd.raw.abroad) continue;
     const s = snaps.get(uf);
     const showPts = S.fastOverlay && effectiveMode() === 'vote';
     for (let i = 0; i < sd.nMun; i++) {
@@ -287,6 +320,16 @@ function paintMap() {
     }
     map.setLayoutProperty(`pts-${uf}`, 'visibility', S.fastOverlay && effectiveMode() === 'vote' ? 'visible' : 'none');
     map.setFeatureState({ source: 'states', id: uf }, { color: '#0a0a0b' });
+  }
+  if (abroadEl) {
+    const a = abroadAgg(), mode = effectiveMode();
+    let col = COLORS.uncounted;
+    if (mode === 'count') {
+      if (S.manualOnly) col = a.countedComp ? seq((a.countedManual / a.countedComp) / METRIC_DOMAINS.manualCount.max) : COLORS.uncounted;
+      else if (a.lula + a.flavio) col = diverging(a.lula / (a.lula + a.flavio));
+    }
+    abroadEl.querySelector('.abroad-circle').style.background = col;
+    abroadEl.classList.toggle('novote', mode !== 'count');
   }
   const note = $('#map-note');
   if (effectiveMode() === 'count' && S.manualOnly) {
@@ -344,7 +387,7 @@ function updateTimelineContext() {
 
 // ---------------------------------------------------------------- panel
 function aggregate() {
-  const tot = { aptos: 0, urnas: 0, statesLoaded: 0, statesTotal: 0 };
+  const tot = { aptos: 0, aptosLogs: 0, urnas: 0, urnasLogs: 0, statesLoaded: 0, statesTotal: 0, abroad: false };
   let acc = null;
   for (const uf of scopeStates()) {
     tot.statesTotal++;
@@ -352,7 +395,8 @@ function aggregate() {
     tot.statesLoaded++;
     const idx = scopeMunis(uf);
     const s = sumOver(snaps.get(uf), idx);
-    for (const i of idx) { tot.aptos += sd.raw.munis.aptos[i]; tot.urnas += sd.raw.munis.urnas[i]; }
+    for (const i of idx) { tot.aptos += sd.raw.munis.aptos[i]; tot.urnas += sd.raw.munis.urnas[i]; if (!sd.raw.abroad) { tot.aptosLogs += sd.raw.munis.aptos[i]; tot.urnasLogs += sd.raw.munis.urnas[i]; } }
+    if (sd.raw.abroad) tot.abroad = true;
     if (!acc) acc = s; else for (const k in s) acc[k] += s[k];
   }
   return { ...tot, ...(acc || {}) };
@@ -373,32 +417,45 @@ function renderPanel() {
   const parts = [];
   parts.push(statusCard(a));
   parts.push(mode === 'count' ? countCard(a) : voteCard(a));
+  if (sel.uf !== 'ZZ') {
   parts.push(`<div class="card"><h3>${S.manualOnly ? 'Votos sem biometria' : 'Votos'} a cada ${M.time.vote_step / 60} min</h3><div class="chart" id="ch-votes"></div>
-    <h3 style="margin-top:14px">Votos sem biometria a cada ${M.time.vote_step / 60} min</h3><div class="chart" id="ch-manual"></div></div>`);
-  parts.push(fastCard(a));
-  parts.push(`<div class="card"><h3>Padrões para conferir <span class="tag">ordenados pelos dados, sem juízo</span></h3><div id="patterns"></div></div>`);
+      <h3 style="margin-top:14px">Votos sem biometria a cada ${M.time.vote_step / 60} min</h3><div class="chart" id="ch-manual"></div></div>`);
+    parts.push(fastCard(a));
+  }
+  if (sel.uf !== 'ZZ') parts.push(`<div class="card"><h3>Padrões para conferir <span class="tag">ordenados pelos dados, sem juízo</span></h3><div id="patterns"></div></div>`);
   if (sel.level === 'muni') parts.push(`<div class="card"><h3>Urnas do município</h3><div id="urnas"><div class="empty">Carregando urnas…</div></div></div>`);
-  else if (sel.level === 'state') parts.push(`<div class="card"><h3>Municípios (tabela)</h3><div id="munis"></div></div>`);
+  else if (sel.level === 'state') parts.push(`<div class="card"><h3>${sel.uf === 'ZZ' ? 'Cidades no exterior' : 'Municípios'} (tabela)</h3><div id="munis"></div></div>`);
   body.innerHTML = parts.join('');
-  drawCharts();
-  bindFast();
+  if (sel.uf !== 'ZZ') { drawCharts(); bindFast(); }
   renderPatterns();
   if (sel.level === 'muni') renderUrnas();
   if (sel.level === 'state') renderMunTable();
 }
 
 function statusCard(a) {
-  return `<div class="card"><div class="stats">
-    <div><div class="stat-label">Urnas abertas</div><div class="stat-value">${fmtInt(a.open)}</div><div class="stat-sub">de ${fmtInt(a.urnas)}</div></div>
-    <div><div class="stat-label">Urnas encerradas</div><div class="stat-value">${fmtInt(a.closed)}</div><div class="stat-sub">${pct(a.closed / a.urnas)}</div></div>
+  if (S.sel.uf === 'ZZ') {
+    const st = M.states.find(s => s.uf === 'ZZ');
+    return `<div class="card"><div class="stats">
+    <div><div class="stat-label">Cidades no exterior</div><div class="stat-value">${fmtInt(st.cities)}</div><div class="stat-sub">${fmtInt(a.urnas)} urnas</div></div>
     <div><div class="stat-label">BUs recebidos pelo TSE</div><div class="stat-value">${fmtInt(a.counted)}</div><div class="stat-sub">${pct(a.counted / a.urnas)}</div></div>
+    <div><div class="stat-label">Horário</div><div class="stat-value">${hhmm(S.t)}</div><div class="stat-sub">${phaseLabel()}</div></div>
+  </div></div>`;
+  }
+  const n = a.urnasLogs || a.urnas;
+  return `<div class="card"><div class="stats">
+    <div><div class="stat-label">Urnas abertas${a.abroad ? ' no Brasil' : ''}</div><div class="stat-value">${fmtInt(a.open)}</div><div class="stat-sub">de ${fmtInt(n)}</div></div>
+    <div><div class="stat-label">Urnas encerradas${a.abroad ? ' no Brasil' : ''}</div><div class="stat-value">${fmtInt(a.closed)}</div><div class="stat-sub">${pct(a.closed / n)}</div></div>
+    <div><div class="stat-label">BUs recebidos pelo TSE</div><div class="stat-value">${fmtInt(a.counted)}</div><div class="stat-sub">${pct(a.counted / a.urnas)}${a.abroad ? ' · inclui exterior' : ''}</div></div>
     <div><div class="stat-label">Horário</div><div class="stat-value">${hhmm(S.t)}</div><div class="stat-sub">${phaseLabel()}</div></div>
   </div></div>`;
 }
 
 function voteCard(a) {
-  return `<div class="card"><h3>Votação até ${hhmm(S.t)}</h3><div class="stats">
-    <div><div class="stat-label">Votos registrados</div><div class="stat-value">${fmtInt(a.votes)}</div><div class="stat-sub">${pct(a.votes / a.aptos)} dos aptos</div></div>
+  if (S.sel.uf === 'ZZ') return `<div class="card"><h3>Votação no exterior</h3>
+    <p class="note">As urnas no exterior registram os horários no <b>fuso local</b> de cada cidade (Lisboa, Tóquio, Boston…), e os arquivos do TSE não identificam o fuso. Por isso a votação no exterior não é posicionada na linha do tempo: as urnas do exterior entram no mapa e nos totais na <b>apuração</b>, no horário em que o TSE recebeu cada BU (horário de Brasília). Não houve habilitação por mesário no exterior (o BU registra 0 eleitores não habilitados por biometria).</p>
+    <p class="note">Mude para <b>Apuração</b> ou avance a linha do tempo para depois das 17:05.</p></div>`;
+  return `<div class="card"><h3>Votação até ${hhmm(S.t)}${a.abroad ? ' <span class="tag">sem o exterior</span>' : ''}</h3><div class="stats">
+    <div><div class="stat-label">Votos registrados</div><div class="stat-value">${fmtInt(a.votes)}</div><div class="stat-sub">${pct(a.votes / a.aptosLogs)} dos aptos no Brasil</div></div>
     <div><div class="stat-label">Sem biometria</div><div class="stat-value">${fmtInt(a.manual)}</div><div class="stat-sub">${pct(a.manual / a.votes)} dos votos</div></div>
     <div><div class="stat-label">Sem digital cadastrada</div><div class="stat-value">${fmtInt(a.nofp)}</div><div class="stat-sub">${pct(a.nofp / a.votes)} dos votos</div></div>
     <div><div class="stat-label">Com biometria</div><div class="stat-value">${fmtInt(a.votes - a.manual - a.nofp)}</div><div class="stat-sub">${pct((a.votes - a.manual - a.nofp) / a.votes)} dos votos</div></div>
@@ -554,7 +611,7 @@ async function renderUrnas() {
     { key: 'zs', label: 'Zona/Seção' }, { key: 'loc', label: 'Local' }, { key: 'model', label: 'Modelo' },
     { key: 'votes', label: 'Votos', fmt: fmtInt }, { key: 'manualPct', label: 'Sem biom.', fmt: v => pct(v) },
     { key: 'fast', label: '⚡ Rápidos', fmt: v => (v ? `<span class="flag">${v}</span>` : '0') },
-    { key: 'close', label: 'Encerrou', fmt: v => (v == null ? 'aberta' : hhmmss(v)) },
+    { key: 'close', label: 'Encerrou', fmt: v => (v == null ? (sd.raw.abroad ? 'fuso local' : 'aberta') : hhmmss(v)) },
     { key: 'recv', label: 'BU recebido', fmt: v => (v == null ? '—' : hhmm(v)) },
     { key: 'lula', label: `${esc(M.election.candidates[0].name)} %`, fmt: v => pct(v) },
   ];
@@ -570,7 +627,8 @@ async function renderUrnas() {
 function renderMunTable() {
   const el = $('#munis'); if (!el) return;
   const sd = loaded.get(S.sel.uf), s = snaps.get(S.sel.uf), m = sd.raw.munis;
-  const rows = m.ibge.map((id, i) => ({ id, name: m.name[i], urnas: m.urnas[i], votes: s.votes[i], turnout: s.votes[i] / m.aptos[i],
+  const ab = !!sd.raw.abroad;
+  const rows = m.ibge.map((id, i) => ({ id, name: m.name[i], urnas: m.urnas[i], votes: ab ? s.countedComp[i] : s.votes[i], turnout: (ab ? s.countedComp[i] : s.votes[i]) / m.aptos[i],
     manualPct: s.votes[i] ? s.manual[i] / s.votes[i] : null, fast: s.fast[i],
     lula: s.lula[i] + s.flavio[i] ? s.lula[i] / (s.lula[i] + s.flavio[i]) : null, counted: s.counted[i] / m.urnas[i] }));
   const cols = [

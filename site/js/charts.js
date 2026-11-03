@@ -1,4 +1,4 @@
-import { hhmm, fmtInt } from './scales.js?v=20261103c';
+import { hhmm, fmtInt } from './scales.js?v=20261103d';
 
 // Small single-series area chart with a time cursor and a hover tooltip.
 // One measure per chart (no dual axes): different measures get separate charts.
