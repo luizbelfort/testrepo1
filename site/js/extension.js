@@ -1,7 +1,7 @@
 // "Prorrogação" view: what happened after 17:00, and the exact limits of its effect on the result.
 // Data: data/extension.json.gz (pipeline/analyze_extension.py). Nothing here infers the candidate of a vote:
 // the urna log does not record it. Bounds assume the most extreme possible composition in each direction.
-import { fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103f';
+import { fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103g';
 
 export let EXT = null;
 const munIdx = new Map();   // uf -> Map(ibge -> row in EXT.munis[uf])

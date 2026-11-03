@@ -1,8 +1,8 @@
 // Report page: "A prorrogação em números". Every number comes from data/extension.json.gz
 // (pipeline/late_votes_table.py + pipeline/analyze_extension.py).
-import { getJSON, setDataVersion } from './data.js?v=20261103f';
-import { areaChart } from './charts.js?v=20261103f';
-import { fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103f';
+import { getJSON, setDataVersion } from './data.js?v=20261103g';
+import { areaChart } from './charts.js?v=20261103g';
+import { fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103g';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + fmtInt(Math.abs(n));

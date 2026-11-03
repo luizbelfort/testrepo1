@@ -17,18 +17,39 @@ def sh(*a): return subprocess.run(list(a), check=True, capture_output=True, text
 
 
 def prep_geo(uf, d):
-    raw, out = os.path.join(d, 'mun_raw.json'), os.path.join(d, 'mun.json')
-    if not os.path.exists(out):
-        if not os.path.exists(raw): sh('curl', '-sSf', '-m', '300', '-o', raw, GEO.format(code=CODES[uf]))
-        sh('node', MAPSHAPER, raw, '-clean', '-simplify', '8%', 'keep-shapes', '-o', 'precision=0.0005', 'format=geojson', out)
-    # simplification can drop very small municipalities entirely: put their original shape back
-    g = json.load(open(out)); r = {f['properties']['id']: f for f in json.load(open(raw))['features']}
-    have = {f['properties']['id'] for f in g['features'] if f.get('geometry')}
-    fixed = [r[i] for i in r if i not in have]
-    if fixed:
-        g['features'] = [f for f in g['features'] if f.get('geometry')] + fixed
-        json.dump(g, open(out, 'w'))
-        print(uf, 'restored original geometry for', [f['properties']['name'] for f in fixed], flush=True)
+    """Municipal shapes for the web: repair the source shapes (valid geometry, ring orientation), simplify with
+    mapshaper, then verify each municipality kept its area; anything that lost more than half its area falls back to a safe
+    shapely simplification of its repaired shape (no holes in the map)."""
+    from shapely.geometry import shape, mapping
+    from shapely.geometry.polygon import orient
+    from shapely.validation import make_valid
+    raw, fixed, out = os.path.join(d, 'mun_raw.json'), os.path.join(d, 'mun_fixed.json'), os.path.join(d, 'mun.json')
+    if not os.path.exists(raw): sh('curl', '-sSf', '-m', '300', '-o', raw, GEO.format(code=CODES[uf]))
+    def polys(g):
+        g = make_valid(g)
+        parts = [g] if g.geom_type == 'Polygon' else [x for x in getattr(g, 'geoms', []) if x.geom_type == 'Polygon']
+        if g.geom_type == 'GeometryCollection':
+            parts = [y for x in g.geoms for y in ([x] if x.geom_type == 'Polygon' else getattr(x, 'geoms', [])) if y.geom_type == 'Polygon']
+        from shapely.geometry import MultiPolygon
+        return MultiPolygon([orient(x, 1.0) for x in parts]) if len(parts) > 1 else orient(parts[0], 1.0)
+    src = json.load(open(raw))
+    rep = {}
+    for f in src['features']:
+        g = polys(shape(f['geometry'])); rep[f['properties']['id']] = g; f['geometry'] = mapping(g)
+    json.dump(src, open(fixed, 'w'))
+    sh('node', MAPSHAPER, fixed, '-simplify', '8%', 'keep-shapes', '-o', 'precision=0.0005', 'format=geojson', out)
+    g = json.load(open(out)); fixed_n = []
+    feats = {f['properties']['id']: f for f in g['features']}
+    for i, geom in rep.items():
+        f = feats.get(i)
+        ok = f is not None and f.get('geometry') and make_valid(shape(f['geometry'])).area >= 0.5 * geom.area
+        if not ok:
+            simp = geom.simplify(0.003, preserve_topology=True)
+            nf = {'type': 'Feature', 'properties': (f or next(x for x in src['features'] if x['properties']['id'] == i))['properties'], 'geometry': mapping(simp)}
+            feats[i] = nf; fixed_n.append(nf['properties']['name'])
+    g['features'] = list(feats.values())
+    json.dump(g, open(out, 'w'))
+    if fixed_n: print(uf, 'shapes re-simplified safely (mapshaper lost area):', fixed_n, flush=True)
     return out
 
 

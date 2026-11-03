@@ -1,8 +1,8 @@
-import { getJSON, setDataVersion, StateData, sumOver } from './data.js?v=20261103f';
-import { Timeline } from './timeline.js?v=20261103f';
-import { areaChart } from './charts.js?v=20261103f';
-import { COLORS, seq, diverging, DIVERGING_SPAN, METRIC_DOMAINS, fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103f';
-import { loadExtension, EXT, cutFor, scopeAgg, muniLate, extCards, nationalCards, urnaRows } from './extension.js?v=20261103f';
+import { getJSON, setDataVersion, StateData, sumOver } from './data.js?v=20261103g';
+import { Timeline } from './timeline.js?v=20261103g';
+import { areaChart } from './charts.js?v=20261103g';
+import { COLORS, seq, diverging, DIVERGING_SPAN, METRIC_DOMAINS, fmtInt, pct, hhmm, hhmmss } from './scales.js?v=20261103g';
+import { loadExtension, EXT, cutFor, scopeAgg, muniLate, extCards, nationalCards, urnaRows } from './extension.js?v=20261103g';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -330,7 +330,7 @@ function paintMap() {
       }
     }
     map.setLayoutProperty(`pts-${uf}`, 'visibility', S.fastOverlay && effectiveMode() === 'vote' ? 'visible' : 'none');
-    map.setFeatureState({ source: 'states', id: uf }, { color: '#0a0a0b' });
+    if (stateFeat.has(uf)) map.setFeatureState({ source: 'states', id: uf }, { color: '#4a4a50' });   // border grey: hairline gaps between simplified shapes read as borders
   }
   if (abroadEl) {
     const a = abroadAgg(), mode = effectiveMode();
