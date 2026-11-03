@@ -23,3 +23,6 @@ body.report { height: auto; }
 .report ul.plain { color: var(--text-secondary); line-height: 1.7; padding-left: 20px; }
 .report code { font-family: var(--mono); font-size: 12px; background: var(--surface-3); padding: 1px 5px; border-radius: 4px; }
 @media (max-width: 640px) { .report h1 { font-size: 24px; } .tile .v { font-size: 20px; } }
+.report details { margin: 8px 0; background: var(--surface-1); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+.report details summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; }
+.report details .table-wrap { margin-top: 8px; overflow-x: auto; }

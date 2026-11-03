@@ -19,7 +19,7 @@ COLS = ['fname', 't_vote', 'manual', 'hab_type', 't_hab', 't_fp_first', 't_manua
 KEY = re.compile(r'(\d{13})-log\.jez$')
 
 
-def state_logs(logdir):
+def state_logs(logdir, cols=None):
     """Yield DataFrames of parsed voters, one batch at a time; reprocessed urnas: newest batch only."""
     batches = sorted(glob.glob(os.path.join(logdir, 'batch_*.parquet')), key=os.path.getmtime)
     owner = {}
@@ -27,7 +27,7 @@ def state_logs(logdir):
         for l in open(p.replace('batch_', 'meta_').replace('.parquet', '.jsonl')):
             owner[json.loads(l)['fname']] = p
     for p in batches:
-        t = pq.read_table(p, columns=[c for c in COLS if c in pq.read_schema(p).names]).to_pandas()
+        t = pq.read_table(p, columns=[c for c in (cols or COLS) if c in pq.read_schema(p).names]).to_pandas()
         yield t[t.fname.map(owner).values == p]
     olds = [p for p in glob.glob(os.path.join(logdir, '*-log.jez.parquet')) if os.path.basename(p)[:-8] not in owner]
     buf = []
