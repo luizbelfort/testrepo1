@@ -66,6 +66,8 @@ def main():
     markers = [
         {'key': 'open', 'short': 'Abertura', 't': 8 * 3600, 'label': 'Início da votação', 'desc': 'Horário oficial de abertura (08:00, horário de Brasília).'},
         {'key': 'close_regular', 'short': 'Encerr.', 't': 17 * 3600, 'label': 'Encerramento regular', 'desc': 'Horário oficial de encerramento (17:00, horário de Brasília). Eleitores já na fila ainda votam.'},
+        {'key': 'hard_stop', 'short': 'Parada 17:00', 't': 17 * 3600, 'label': 'Parada às 17:00 ▸', 'action': 'ext',
+         'desc': 'Cenário: e se nenhum voto depois das 17:00 contasse? Abre a visão Prorrogação, com os votos registrados depois do corte e os limites exatos do efeito sobre o resultado.'},
         {'key': 'ext_start', 'short': 'Além filas', 't': ext_start, 'label': 'Urnas além das filas', 'desc': f'Calculado dos dados ({scope}): minuto em que 99% das urnas que encerraram antes das 18:00 já estavam encerradas. Depois dele, as urnas abertas são as que funcionaram além das filas normais (prorrogação).'},
         {'key': 'ext_end', 'short': 'Fim prorr.', 't': ext_end, 'label': 'Fim da prorrogação', 'desc': f'Calculado dos dados ({scope}): minuto em que 99,99% das urnas já estavam encerradas (DT_ENCERRAMENTO do BU, no horário de Brasília). Restavam {int((closes > ext_end).sum())} urnas abertas.'},
         {'key': 'last_close', 'short': 'Última urna', 't': last_close, 'label': 'Última urna encerrada', 'desc': f'{last[2]} ({last[1]}), zona {last[3]}, seção {last[4]}: encerrou às {last[0]//3600:02d}:{last[0]%3600//60:02d}:{last[0]%60:02d} com {last[5]} votos.'},

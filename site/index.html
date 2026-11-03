@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="vendor/maplibre-gl-4.7.1/maplibre-gl.css">
-  <link rel="stylesheet" href="css/app.css?v=20261103d">
+  <link rel="stylesheet" href="css/app.css?v=20261103f">
 </head>
 <body>
   <header class="topbar">
@@ -21,6 +21,7 @@
       </div>
     </div>
     <div class="topbar-actions">
+      <a class="btn ghost" href="prorrogacao.html">Relatório: a prorrogação</a>
       <button class="btn ghost" id="btn-about" type="button">Sobre os dados e o método</button>
     </div>
   </header>
@@ -47,6 +48,7 @@
           <button type="button" data-mode="auto" class="on">Automático</button>
           <button type="button" data-mode="vote">Votação</button>
           <button type="button" data-mode="count">Apuração</button>
+          <button type="button" data-mode="ext" class="ext-mode">Prorrogação</button>
         </div>
       </div>
     </div>
@@ -106,6 +108,6 @@
   </dialog>
 
   <script src="vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
-  <script type="module" src="js/app.js?v=20261103d"></script>
+  <script type="module" src="js/app.js?v=20261103f"></script>
 </body>
 </html>

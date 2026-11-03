@@ -1,10 +1,10 @@
-import { hhmm } from './scales.js?v=20261103d';
+import { hhmm } from './scales.js?v=20261103f';
 
 // The wide scrubber at the top. Owns no data logic: it draws context series handed to it
 // and reports the chosen time through onChange(t).
 export class Timeline {
-  constructor({ track, canvas, markersEl, handle, manifest, onChange }) {
-    Object.assign(this, { track, canvas, markersEl, handle, M: manifest, onChange });
+  constructor({ track, canvas, markersEl, handle, manifest, onChange, onMarker }) {
+    Object.assign(this, { track, canvas, markersEl, handle, M: manifest, onChange, onMarker });
     this.t0 = manifest.time.start; this.t1 = manifest.time.end;
     this.t = manifest.time.vote_t0;
     this.context = { votes: null, recv: null };
@@ -38,13 +38,14 @@ export class Timeline {
       el.className = 'tl-marker';
       const b = document.createElement('button');
       b.type = 'button'; b.textContent = `${m.label} · ${hhmm(m.t)}`; b.title = m.desc || '';
-      b.addEventListener('click', e => { e.stopPropagation(); this.set(m.t); });
+      if (m.action) el.classList.add('action');
+      b.addEventListener('click', e => { e.stopPropagation(); this.set(m.t); this.onMarker?.(m); });
       el.appendChild(b); this.markersEl.appendChild(el);
       return { m, el };
     });
     this.layoutMarkers = () => {
       // greedy row assignment on real label extents; labels near the edges are aligned inward
-      const W = this.track.clientWidth, rows = [[], [], []];
+      const W = this.track.clientWidth, rows = [[], [], [], []];
       for (const { m, el } of this.markerEls) {
         const x = this.x(m.t); el.style.left = `${x}px`;
         const b = el.firstChild;
@@ -56,9 +57,9 @@ export class Timeline {
         b.style.transform = `translateX(${shift}px)`;
         const span = [x + shift - 6, x + shift + w + 6];
         let r = rows.findIndex(row => row.every(([a, c]) => span[1] < a || span[0] > c));
-        if (r < 0) r = 2;
+        if (r < 0) r = 3;
         rows[r].push(span);
-        b.style.top = `${6 + r * 24}px`;
+        b.style.top = `${5 + r * 22}px`;
       }
     };
   }

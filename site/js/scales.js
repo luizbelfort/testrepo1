@@ -38,10 +38,11 @@ export function diverging(share) {
 // Fixed domains (not rescaled with time) so colours stay comparable across the whole timeline.
 export const METRIC_DOMAINS = {
   turnout: { max: 0.9, fmt: v => pct(v, 0), title: 'Comparecimento até o horário (votos ÷ eleitores aptos)' },
-  turnoutManual: { max: 0.15, fmt: v => pct(v, 0), title: 'Votos sem biometria até o horário ÷ eleitores aptos' },
-  manual: { max: 0.2, fmt: v => pct(v, 0), title: 'Votos sem biometria ÷ votos até o horário' },
-  fast: { max: 0.1, fmt: v => pct(v, 0), title: 'Votos rápidos ÷ votos sem biometria até o horário' },
-  manualCount: { max: 0.2, fmt: v => pct(v, 0), title: 'Votos sem biometria ÷ votos (urnas já apuradas)' },
+  turnoutManual: { max: 0.15, fmt: v => pct(v, 0), title: 'Votos sem biometria (falha + não pedida) até o horário ÷ eleitores aptos' },
+  manual: { max: 0.3, fmt: v => pct(v, 0), title: 'Votos sem biometria (falha na leitura + urna não pediu) ÷ votos' },
+  fast: { max: 0.1, fmt: v => pct(v, 0), title: 'Votos rápidos ÷ votos com falha na leitura da digital' },
+  late: { max: 0.002, fmt: v => `${Math.round(v * 10000).toLocaleString('pt-BR')}`, title: 'Votos depois do corte, por 10 mil votos do município' },
+  manualCount: { max: 0.3, fmt: v => pct(v, 0), title: 'Votos sem biometria (falha + não pedida) ÷ votos, urnas apuradas' },
 };
 
 export const fmtInt = n => (n == null ? '—' : Math.round(n).toLocaleString('pt-BR'));

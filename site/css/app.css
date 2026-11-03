@@ -47,7 +47,7 @@ button { font: inherit; color: inherit; }
 .tl-controls { display: flex; gap: 10px; flex-wrap: wrap; }
 .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface-2); display: grid; place-items: center; cursor: pointer; }
 .icon-btn:hover { background: var(--surface-3); }
-.tl-track { position: relative; height: 104px; border-radius: var(--radius); background: var(--surface-1); border: 1px solid var(--line); cursor: ew-resize; touch-action: none; outline: none; }
+.tl-track { position: relative; height: 118px; border-radius: var(--radius); background: var(--surface-1); border: 1px solid var(--line); cursor: ew-resize; touch-action: none; outline: none; }
 .tl-track:focus-visible { box-shadow: 0 0 0 2px var(--text-secondary); }
 .tl-track canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: var(--radius); }
 .tl-markers { position: absolute; inset: 0; pointer-events: none; }
@@ -70,7 +70,7 @@ button { font: inherit; color: inherit; }
 .chip.amber[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
 
 /* ---------- layout ---------- */
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 420px; height: calc(100vh - 57px - 175px); min-height: 520px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 420px; height: calc(100vh - 57px - 189px); min-height: 520px; }
 .map-wrap { position: relative; min-width: 0; }
 #map { position: absolute; inset: 0; background: var(--bg); }
 .maplibregl-ctrl-group { background: var(--surface-2) !important; }
@@ -190,3 +190,20 @@ table.grid tr.sel td { background: #2a2a20; }
 .abroad-dot.novote .abroad-circle { background-image: repeating-linear-gradient(45deg, transparent 0 5px, rgba(255,255,255,.08) 5px 10px); }
 .abroad-dot.sel .abroad-circle { box-shadow: 0 0 0 2px var(--text-primary); }
 .abroad-label { font-size: 11px; color: var(--text-secondary); background: rgba(10,10,11,.8); padding: 1px 6px; border-radius: 999px; }
+
+.tl-marker.action button { color: var(--amber); border-color: rgba(250,178,25,.6); background: rgba(250,178,25,.08); }
+.tl-marker.action { border-left-color: rgba(250,178,25,.7); }
+
+/* Prorrogação view */
+.seg button.ext-mode.on { color: var(--amber); }
+.ext-cuts { flex-wrap: wrap; }
+.verdict { margin: 12px 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5; }
+.verdict.ok { background: rgba(240,239,236,.06); border: 1px solid var(--line-strong); }
+.verdict.warn { background: rgba(250,178,25,.1); border: 1px solid rgba(250,178,25,.6); }
+table.ext-bounds td:first-child { font-family: var(--font); color: var(--text-secondary); }
+.list.est li { cursor: default; }
+.topbar-actions { display: flex; gap: 8px; }
+a.btn { text-decoration: none; color: inherit; display: inline-block; }
+
+table.ext-bounds td, table.ext-bounds th { white-space: normal; }
+table.ext-bounds td:nth-child(3) { color: var(--text-primary); }

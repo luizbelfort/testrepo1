@@ -40,7 +40,7 @@ export class StateData {
     this.fastCache = null;
     this.munFast = new Map();
     // pre-sorted views for the "patterns" lists (scanned until enough matches are found)
-    const share = k => (u.comp[k] ? u.manual[k] / u.comp[k] : 0);
+    const share = k => (u.comp[k] ? (u.manual[k] + u.nofp[k]) / u.comp[k] : 0);   // sem biometria = falha + não pedida
     this.byManualShare = [...Array(this.nUrna).keys()].sort((a, b) => share(b) - share(a));
     this.byCloseDesc = [...Array(this.nUrna).keys()].filter(k => u.close[k] >= 0).sort((a, b) => u.close[b] - u.close[a]);
     this.lastColor = new Array(this.nMun).fill(null);   // avoid re-sending unchanged feature states to the map
@@ -89,14 +89,15 @@ export class StateData {
     const fp = this.fastPrefix(th);
     const u = this.u, n = this.nMun;
     const res = {
-      votes: new Float64Array(n), manual: new Float64Array(n), nofp: new Float64Array(n),
+      votes: new Float64Array(n), manual: new Float64Array(n), nofp: new Float64Array(n), semBio: new Float64Array(n),
       fast: new Float64Array(n), fastVoteManual: new Float64Array(n), fastVoteBio: new Float64Array(n), bioAll: new Float64Array(n),
       open: new Float64Array(n), closed: new Float64Array(n), counted: new Float64Array(n),
       lula: new Float64Array(n), flavio: new Float64Array(n), branco: new Float64Array(n), nulo: new Float64Array(n),
-      countedComp: new Float64Array(n), countedManual: new Float64Array(n),
+      countedComp: new Float64Array(n), countedManual: new Float64Array(n), countedSemBio: new Float64Array(n),
     };
     for (let i = 0; i < n; i++) {
       res.votes[i] = this.cum.votes[i][b]; res.manual[i] = this.cum.manual[i][b]; res.nofp[i] = this.cum.nofp[i][b];
+      res.semBio[i] = res.manual[i] + res.nofp[i];
       res.fast[i] = fp.full[i][fb]; res.fastVoteManual[i] = fp.voteManual[i][fb];
       res.fastVoteBio[i] = fp.voteBio[i][fb]; res.bioAll[i] = fp.bioAll[i][fb];
     }
@@ -110,7 +111,7 @@ export class StateData {
       const m = u.m[k];
       res.counted[m]++; res.lula[m] += u.lula[k]; res.flavio[m] += u.flavio[k];
       res.branco[m] += u.branco[k]; res.nulo[m] += u.nulo[k];
-      res.countedComp[m] += u.comp[k]; res.countedManual[m] += u.manual[k];
+      res.countedComp[m] += u.comp[k]; res.countedManual[m] += u.manual[k]; res.countedSemBio[m] += u.manual[k] + u.nofp[k];
     }
     return res;
   }
@@ -118,8 +119,11 @@ export class StateData {
   // Series (per vote bucket) for the selected municipalities, for charts and the timeline silhouette.
   seriesFor(munIdxs, key) {
     const N = this.M.time.vote_n, out = new Float64Array(N);
-    const src = this.raw.series[key];
-    for (const i of munIdxs) { const s = src[i]; for (let j = 0; j < N; j++) out[j] += s[j]; }
+    const keys = key === 'semBio' ? ['manual', 'nofp'] : [key];   // sem biometria = falha na leitura + não pedida
+    for (const kk of keys) {
+      const src = this.raw.series[kk];
+      for (const i of munIdxs) { const s = src[i]; for (let j = 0; j < N; j++) out[j] += s[j]; }
+    }
     return out;
   }
 

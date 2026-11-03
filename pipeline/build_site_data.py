@@ -213,12 +213,13 @@ def main():
     um = FM.groupby(['m', 'u', 'tb', 'fp', 'rel', 'vote']).size().rename('n').reset_index()
     sv = np.bincount(ui * n_fast + fb, minlength=nU * n_fast).reshape(nU, n_fast)
     sm = np.bincount(ui[manual] * n_fast + fb[manual], minlength=nU * n_fast).reshape(nU, n_fast)
+    sn = np.bincount(ui[nofp] * n_fast + fb[nofp], minlength=nU * n_fast).reshape(nU, n_fast)
     by_m = {k: g.drop(columns='m') for k, g in um.groupby('m')}
     urnas_of = u.groupby('m').groups
     for mi in range(nM):
         us = sorted(urnas_of.get(mi, []))
         g = by_m.get(mi, pd.DataFrame(columns=['u', 'tb', 'fp', 'rel', 'vote', 'n']))
-        dump_gz({'manual': col(g), 'series': {'u': [int(x) for x in us], 'votes': sv[us].tolist(), 'manual': sm[us].tolist()}},
+        dump_gz({'manual': col(g), 'series': {'u': [int(x) for x in us], 'votes': sv[us].tolist(), 'manual': sm[us].tolist(), 'nofp': sn[us].tolist()}},
                 os.path.join(fast_dir, f'{munis.ibge[mi]}.json.gz'))
 
     # ---------------------------------------------------------------- state file
@@ -287,7 +288,7 @@ def build_abroad(a):
     for mi in range(nM):
         us = u.index[u.m == mi].tolist()
         dump_gz({'manual': {'u': [], 'tb': [], 'fp': [], 'rel': [], 'vote': [], 'n': []},
-                 'series': {'u': us, 'votes': [[0] * n_fast for _ in us], 'manual': [[0] * n_fast for _ in us]}},
+                 'series': {'u': us, 'votes': [[0] * n_fast for _ in us], 'manual': [[0] * n_fast for _ in us], 'nofp': [[0] * n_fast for _ in us]}},
                 os.path.join(fast_dir, f'{ids[mi]}.json.gz'))
     neg = [-1] * nU
     state = {

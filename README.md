@@ -32,6 +32,19 @@ Urna clocks run on local time. The pipeline derives each municipality's offset f
 Brasília, so the local opening hour gives the offset), which covers Acre, western Amazonas, MT, MS, RO, RR and
 Fernando de Noronha without a hand-made table.
 
+### "Sem biometria"
+
+Everywhere on the site, *sem biometria* = fingerprint read failed and a mesário released the voter **plus** voters for
+whom the urna did not ask for a fingerprint.
+
+### The extension ("Prorrogação")
+
+`pipeline/late_votes_table.py` counts, per urna, the votes cast after each cutoff (17:00 … 19:00, Brasília) and how
+voters were enabled; `pipeline/analyze_extension.py` derives exact hard-stop bounds (removing every late vote, all for
+one candidate or all for the other), where the extended urnas were, the biometric profile vs. the same urnas'
+16:00–17:00 voters, and clearly-labelled statistical estimates. Results: the **Prorrogação** map view, the
+"Parada às 17:00" timeline milestone, `site/prorrogacao.html` and `docs/relatorio_prorrogacao.md`.
+
 ### "Fast votes"
 
 A vote without biometrics is flagged as fast when it meets all three user-chosen limits: (1) time from the first
