@@ -33,7 +33,7 @@ def load_bweb(site):
     for p in sorted(glob.glob(os.path.join(site, 'data', '*.json.gz'))):
         if not re.fullmatch(r'[A-Z]{2}\.json\.gz', os.path.basename(p)): continue
         d = json.load(gzip.open(p)); uf = os.path.basename(p)[:2]
-        if d.get('abroad') or 'urnas' not in d: continue
+        if 'urnas' not in d: continue
         u, m = d['urnas'], d['munis']
         tse = [int(m['tse'][x]) for x in u['m']]
         rows.append(pd.DataFrame({'key': [f"o03221{uf.lower()}{t:05d}{z:04d}{s:04d}" for t, z, s in zip(tse, u['z'], u['s'])],
@@ -71,7 +71,11 @@ def verification(vdir, site):
     eq &= g('rdv_n').values == g('bu_comp_pres').values
     res['bu_rdv'] = eq & res.bu_decode & res.rdv_decode
     res['bu_bweb'] = ((g('bu_lula') == g('w_lula', -1)) & (g('bu_flavio') == g('w_flavio', -1)) & (g('bu_comp') == g('w_comp', -1)) & (g('bu_aptos') == g('w_aptos', -1))) & res.bu_decode
-    res['hab_sum'] = (g('bu_hab_code') + g('bu_hab_bio') + g('bu_hab_other')) == g('bu_comp')
+    # overseas BUs carry no habilitation counts (no biometrics abroad): the check does not apply, counted as such
+    res['hab_na'] = (V['bu_hab_code'].isna() if 'bu_hab_code' in V else True) & res.bu_decode
+    res['hab_sum'] = ((g('bu_hab_code') + g('bu_hab_bio') + g('bu_hab_other')) == g('bu_comp')) | res.hab_na
+    # sections counted by the contingency system (SA: busa.dat / sa.vsc instead of an urna's bu.dat / vota.vsc)
+    res['sa'] = V.get('files', pd.Series('', index=V.index)).fillna('').str.contains('busa.dat')
     detail_cols = ['key', 'uf', 'muni', 'model', 'cert_issuer', 'bu_comp', 'bu_aptos', 'bu_lula', 'bu_flavio', 'bu_branco', 'bu_nulo',
                    'rdv_n', 'rdv_lula', 'rdv_flavio', 'rdv_branco', 'rdv_nulo', 'w_lula', 'w_flavio', 'w_comp', 'w_aptos',
                    'bu_hab_code', 'bu_hab_bio', 'bu_hab_other', 'sw_mismatch', 'hw_mismatch', 'fetch_error', 'sig_error', 'bu_error', 'rdv_error']
@@ -126,6 +130,10 @@ def main():
     J = {'checks': [{'key': k, 'label': l} for k, l in CHECKS]}
     if glob.glob(os.path.join(vdir, '*.jsonl')):
         V, res, D = verification(vdir, site)
+        SA = res[res.sa].merge(D, on=['key', 'uf'], how='left')
+        J['sa_urnas'] = json.loads(SA[['key', 'uf'] + [c for c in ('muni',) if c in SA]].to_json(orient='records'))
+        J['hab_not_applicable'] = int(res.hab_na.sum())
+        res = res[~res.sa].drop(columns='sa')
         J['verify_national'] = tallies(res)[0]
         J['verify_states'] = tallies(res, 'uf')
         bad = res[[c for c, _ in CHECKS]].all(axis=1) == False

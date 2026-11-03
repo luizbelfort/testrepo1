@@ -21,12 +21,14 @@ function verifySection(C, M) {
   }).join('');
   const fl = (C.verify_fail_list || []).slice(0, 200).map(r => `<tr><td>${esc(r.uf)}</td><td>${esc(r.muni)}</td><td><code>${esc(r.key)}</code></td><td>${esc(r.failed_checks)}</td><td>${r.bu_lula ?? '—'} / ${r.rdv_lula ?? '—'} / ${r.w_lula ?? '—'}</td><td>${r.bu_flavio ?? '—'} / ${r.rdv_flavio ?? '—'} / ${r.w_flavio ?? '—'}</td><td>${r.bu_comp ?? '—'} / ${r.rdv_n ?? '—'} / ${r.w_comp ?? '—'}</td><td>${esc(r.fetch_error || r.sig_error || r.bu_error || r.rdv_error || r.sw_mismatch || r.hw_mismatch || '')}</td></tr>`).join('');
   const iss = Object.entries(C.cert_issuers || {}).map(([k, v]) => `${esc(k)}: ${fmtInt(v)}`).join(' · ');
-  const mod = Object.entries(C.models || {}).map(([k, v]) => `UE20${esc(k)}: ${fmtInt(v)}`).join(' · ');
+  const mod = Object.entries(C.models || {}).map(([k, v]) => `${k === '—' ? 'sem modelo (SA)' : 'UE20' + parseInt(k)}: ${fmtInt(v)}`).join(' · ');
   return `
   <h2>Conferência dos arquivos de cada urna</h2>
   <p class="lede">Para cada uma das ${fmtInt(N.urnas)} urnas, foram baixados do TSE os arquivos que ela gerou e transmitiu — Boletim de Urna (BU), Registro Digital do Voto (RDV), imagem do BU, log e o arquivo de assinaturas — e conferidos entre si e com a planilha de resultados por seção (bweb). Uma linha com zero na coluna "não confere" significa que <b>todas</b> as urnas passaram naquela conferência.</p>
   <div class="table-wrap"><table class="grid"><thead><tr><th>Conferência</th><th>Confere</th><th>Não confere</th><th>% que confere</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="note">Certificados das urnas, por autoridade emissora: ${iss}. Modelos: ${mod}.</p>
+  ${C.hab_not_applicable ? `<p class="note">A conferência das habilitações não se aplica a ${fmtInt(C.hab_not_applicable)} urnas do exterior: o BU dessas urnas não traz a contagem por tipo de habilitação (não há biometria no exterior). Elas aparecem como "confere" nessa linha.</p>` : ''}
+  ${(C.sa_urnas || []).length ? `<p class="note">${fmtInt(C.sa_urnas.length)} seções foram apuradas pelo Sistema de Apuração (SA, contingência — arquivos <code>busa.dat</code>/<code>sa.vsc</code> em vez dos de uma urna) e ficam fora da tabela acima, porque não têm os arquivos de urna a conferir: ${C.sa_urnas.map(r => `<code>${esc(r.key)}</code>`).join(', ')}.</p>` : ''}
   <div class="caveat"><b>O que não foi possível conferir, e por quê:</b>
     <ul class="plain">
       <li>O <b>valor</b> das assinaturas digitais. A assinatura de software usa o algoritmo CEPESC, de uso restrito do governo; a da urna usa uma curva elíptica de 521 bits (formato Ed521) cujo procedimento exato o TSE não publica — os formatos documentados publicamente foram testados e nenhum corresponde. O que foi conferido: que cada arquivo publicado tem exatamente o hash SHA-512 registrado e assinado pela urna, que a lista assinada não foi alterada (auto-hash), e que o certificado pertence àquela urna e era válido no dia.</li>

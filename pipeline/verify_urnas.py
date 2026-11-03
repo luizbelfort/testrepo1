@@ -91,6 +91,7 @@ def fetch(url, urnas, tmp):
 
 def cert_info(raw):
     from cryptography import x509
+    if raw[:2] == b'\x30\x82': raw = raw[:4 + int.from_bytes(raw[2:4], 'big')]   # older urnas (UE2013/2015) append a trailing byte
     c = x509.load_pem_x509_certificate(raw) if raw.lstrip().startswith(b'-----') else x509.load_der_x509_certificate(raw)
     cn = lambda n: ','.join(a.value for a in n.get_attributes_for_oid(x509.NameOID.COMMON_NAME))
     return {'cert_issuer': cn(c.issuer), 'cert_subject': cn(c.subject), 'cert_alg': c.signature_algorithm_oid.dotted_string,

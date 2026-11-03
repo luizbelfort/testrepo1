@@ -45,6 +45,17 @@ one candidate or all for the other), where the extended urnas were, the biometri
 16:00–17:00 voters, and clearly-labelled statistical estimates. Results: the **Prorrogação** map view, the
 "Parada às 17:00" timeline milestone, `site/prorrogacao.html` and `docs/relatorio_prorrogacao.md`.
 
+### Conferências das urnas (files, signatures, RDV × BU) and statistical signals
+
+`pipeline/verify_urnas.py <UF> site <out>` downloads, for every urna, only its own members of the TSE `arqurnatot`
+package (HTTP range requests) and checks: the SHA-512 of BU, RDV, BU image and log against the list signed by the
+software and by the urna; the self-hash of each signed list; the urna's certificate (issuer, validity on election
+day, serial = internal urna number in the BU); BU and RDV decoded (2026 layouts in `pipeline/spec/`); RDV = BU vote by
+vote; BU = bweb; habilitations = attendance. The signature *values* (CEPESC; Ed521-style) cannot be checked with
+public documentation and are reported as such. `pipeline/anomaly_scan.py` computes per-urna statistical signals from
+the logs and `pipeline/summarize_checks.py` writes `site/data/conferencias.json.gz` and the CSVs in
+`site/data/conferencias/`, shown on `site/conferencias.html`. A flagged urna is a pattern to check, not proof.
+
 ### "Fast votes"
 
 A vote without biometrics is flagged as fast when it meets all three user-chosen limits: (1) time from the first
